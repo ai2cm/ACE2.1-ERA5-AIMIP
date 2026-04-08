@@ -1,0 +1,10 @@
+name: ace-aimip
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.11
+  - pip
+  - pip:
+    - beaker-gantry
+    - fme @ git+https://github.com/ai2cm/ace@70c966ed5b8843806c2af022dd41872e0de76fa8
