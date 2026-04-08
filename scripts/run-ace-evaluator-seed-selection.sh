@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+export GRPC_VERBOSITY=ERROR
 
 JOB_NAME_BASE="ace-aimip-evaluator-seed-selection"
 JOB_GROUP="ace-aimip"
@@ -21,13 +22,15 @@ CONFIG_PATH=$REPO_ROOT/configs/$CONFIG_FILENAME
 BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')
 
 python -m fme.ace.validate_config --config_type evaluator $CONFIG_PATH
+CONFIG_B64=$(base64 < "$CONFIG_PATH" | tr -d '\n')
 
 launch_job () {
     local JOB_NAME=$1
     local SEED_CHECKPOINT_ID=$2
 
     gantry run \
-        --remote https://github.com/ai2cm/ace@70c966ed5b8843806c2af022dd41872e0de76fa8 \
+        --remote https://github.com/ai2cm/ace \
+        --ref 70c966ed5b8843806c2af022dd41872e0de76fa8 \
         --name $JOB_NAME \
         --task-name $JOB_NAME \
         --description 'Run ACE2-ERA5 evaluator for AIMIP seed selection' \
@@ -53,7 +56,7 @@ launch_job () {
         --budget ai2/climate \
         --system-python \
         --install "pip install --no-deps ." \
-        -- python -I -m fme.ace.evaluator $CONFIG_PATH
+        -- bash -c "echo '${CONFIG_B64}' | base64 -d > /tmp/config.yaml && python -I -m fme.ace.evaluator /tmp/config.yaml"
 
     }
 

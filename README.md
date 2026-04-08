@@ -24,7 +24,7 @@ manually after evaluating each stage.
 ### 1. Train
 
 ```bash
-bash run-ace-train.sh
+bash scripts/run-ace-train.sh
 ```
 
 Trains 4 random-seed ensemble members (RS0–RS3) on ERA5 1979–2008, with validation on 2009–2014.
@@ -33,8 +33,8 @@ Config: `ace-train-config.yaml`.
 ### 2. Evaluate training seeds
 
 ```bash
-bash run-ace-evaluator-seed-selection.sh
-bash run-ace-evaluator-seed-selection-single.sh
+bash scripts/run-ace-evaluator-seed-selection.sh
+bash scripts/run-ace-evaluator-seed-selection-single.sh
 ```
 
 Evaluate all 4 trained checkpoints to select the best seed for fine-tuning.
@@ -51,7 +51,7 @@ in `run-ace-fine-tune-decoder-pressure-levels.sh`.
 ### 3. Fine-tune
 
 ```bash
-bash run-ace-fine-tune-decoder-pressure-levels.sh
+bash scripts/run-ace-fine-tune-decoder-pressure-levels.sh
 ```
 
 Freezes the best trained checkpoint and trains a secondary MLP decoder for 65 pressure-level
@@ -68,7 +68,7 @@ checkpoint ID is used in `run-ace-inference.sh`.
 ### 5. Run inference
 
 ```bash
-bash run-ace-inference.sh
+bash scripts/run-ace-inference.sh
 ```
 
 Runs 15 parallel 46-year simulations (1978-10-01 to 2024-12-31) using the best fine-tuned

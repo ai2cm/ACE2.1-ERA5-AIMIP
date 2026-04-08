@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+export GRPC_VERBOSITY=ERROR
 
 JOB_NAME_BASE="ace-aimip-inference-oct-1978-2024"
 JOB_GROUP="ace-aimip"
@@ -29,8 +30,14 @@ launch_job () {
     local IC=$3
     local OVERRIDE=$4
 
+    # Apply IC substitution locally and encode for transfer to container.
+    # gantry clones the remote repo so local paths don't exist on the cluster.
+    local CONFIG_B64
+    CONFIG_B64=$(sed "s/_r[0-9]i/_r${IC}i/g" "$TEMPLATE_CONFIG" | base64 | tr -d '\n')
+
     gantry run \
-        --remote https://github.com/ai2cm/ace@70c966ed5b8843806c2af022dd41872e0de76fa8 \
+        --remote https://github.com/ai2cm/ace \
+        --ref 70c966ed5b8843806c2af022dd41872e0de76fa8 \
         --name $JOB_NAME \
         --task-name $JOB_NAME \
         --description 'Run ACE2-ERA5 inference' \
@@ -56,7 +63,7 @@ launch_job () {
         --budget ai2/climate \
         --system-python \
         --install "pip install --no-deps ." \
-        -- bash -c "sed 's/_r[0-9]i/_r${IC}i/g' ${TEMPLATE_CONFIG} > /tmp/ic-config.yaml && python -I -m fme.ace.inference /tmp/ic-config.yaml --override ${OVERRIDE}"
+        -- bash -c "echo '${CONFIG_B64}' | base64 -d > /tmp/ic-config.yaml && python -I -m fme.ace.inference /tmp/ic-config.yaml --override ${OVERRIDE}"
 
 }
 

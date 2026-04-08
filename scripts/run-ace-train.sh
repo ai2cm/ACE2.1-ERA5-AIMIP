@@ -1,6 +1,7 @@
 #!/bin/bash
 
 set -e
+export GRPC_VERBOSITY=ERROR
 
 JOB_NAME_BASE="ace-aimip-train"
 JOB_GROUP="ace-aimip"
@@ -12,6 +13,7 @@ BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')
 N_GPUS=4
 
 python -m fme.ace.validate_config --config_type train $CONFIG_PATH
+CONFIG_B64=$(base64 < "$CONFIG_PATH" | tr -d '\n')
 
 launch_job () {
 
@@ -20,7 +22,8 @@ launch_job () {
     OVERRIDE="$@"
 
     gantry run \
-        --remote https://github.com/ai2cm/ace@70c966ed5b8843806c2af022dd41872e0de76fa8 \
+        --remote https://github.com/ai2cm/ace \
+        --ref 70c966ed5b8843806c2af022dd41872e0de76fa8 \
         --name $JOB_NAME \
         --task-name $JOB_NAME \
         --description 'Run ACE2-ERA5 training on AIMIP period' \
@@ -43,7 +46,7 @@ launch_job () {
         --budget ai2/climate \
         --system-python \
         --install "pip install --no-deps ." \
-        -- torchrun --nproc_per_node $N_GPUS -m fme.ace.train $CONFIG_PATH --override $OVERRIDE
+        -- bash -c "echo '${CONFIG_B64}' | base64 -d > /tmp/config.yaml && torchrun --nproc_per_node $N_GPUS -m fme.ace.train /tmp/config.yaml --override ${OVERRIDE}"
 
 }
 
