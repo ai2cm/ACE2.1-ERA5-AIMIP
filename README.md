@@ -1,4 +1,4 @@
-# ERA5 AIMIP Baseline
+# ACE2.1-ERA5 (AIMIP) training and evaluation
 
 This directory contains scripts and configurations for training and running an ACE2 model on ERA5
 data for the AIMIP evaluation protocol. This configuration is referred to as **ACE2.1-ERA5**. The
