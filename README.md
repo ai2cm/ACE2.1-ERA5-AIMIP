@@ -83,16 +83,16 @@ Configs: `ace-aimip-inference-config.yaml`, `ace-aimip-inference-p2k-config.yaml
 ### 6. Postprocess inference outputs
 
 ```bash
-cd scripts/aimip_postprocessing
 make postprocess
 ```
-
-(Or `python postprocess.py --help` for full options.)
 
 Converts the raw 6-hourly inference outputs from step 5 into CMIP6-compliant daily and monthly
 mean NetCDF files. Transformations include: time coordinate standardization, stacking of
 per-level variables into a single 3D array along a `plev` or `model_layer` dimension, coordinate
 bounds computation, CF metadata assignment, and CMIP6 global attribute assignment.
+
+The postprocessing script and its configuration files live in `scripts/aimip_postprocessing/`.
+Run `python scripts/aimip_postprocessing/postprocess.py --help` for the full option list.
 
 Key options:
 
