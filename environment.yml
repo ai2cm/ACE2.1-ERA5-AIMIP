@@ -8,4 +8,5 @@ dependencies:
   - pip:
     - beaker-gantry==3.6.0
     - cftime
+    - pytest
     - fme @ git+https://github.com/ai2cm/ace@70c966ed5b8843806c2af022dd41872e0de76fa8

@@ -21,10 +21,10 @@ inference:
 postprocess:
 	cd $(POSTPROCESS_DIR) && conda run -n $(ENVIRONMENT_NAME) python postprocess.py
 
-test:
+test-postprocess:
 	cd $(POSTPROCESS_DIR) && conda run -n $(ENVIRONMENT_NAME) python -m pytest test_postprocess.py -v --noconftest
 
 clean:
 	rm -rf $(LOCAL_DIR)
 
-.PHONY: create-env train evaluate fine-tune inference postprocess test clean
+.PHONY: create-env train evaluate fine-tune inference postprocess test-postprocess clean

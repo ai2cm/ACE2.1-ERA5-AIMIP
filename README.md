@@ -113,4 +113,4 @@ Output files follow the CMIP6 Data Reference Syntax:
 {local_dir}/{experiment_id}/{variant_label}/{table_id}/{varname}/{grid_label}/{version}/{filename}.nc
 ```
 
-Run `make test` to execute the unit test suite for the postprocessing helpers.
+Run `make test-postprocess` to execute the unit test suite for the postprocessing helpers.
