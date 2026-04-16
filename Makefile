@@ -19,7 +19,7 @@ inference:
 	bash scripts/run-ace-inference.sh
 
 postprocess:
-	cd $(POSTPROCESS_DIR) && conda run -n $(ENVIRONMENT_NAME) python postprocess.py
+	cd $(POSTPROCESS_DIR) && conda run -n $(ENVIRONMENT_NAME) python postprocess.py $(ARGS)
 
 test-postprocess:
 	cd $(POSTPROCESS_DIR) && conda run -n $(ENVIRONMENT_NAME) python -m pytest test_postprocess.py -v --noconftest

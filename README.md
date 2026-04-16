@@ -86,7 +86,7 @@ Configs: `ace-aimip-inference-config.yaml`, `ace-aimip-inference-p2k-config.yaml
 ### 6. Postprocess inference outputs
 
 ```bash
-make postprocess
+make postprocess ARGS="--raw-results-dir gs://... --processed-results-dir gs://..."
 ```
 
 Converts the raw 6-hourly inference outputs from step 5 into CMIP6-compliant daily and monthly
