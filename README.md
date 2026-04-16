@@ -7,14 +7,14 @@ and SST perturbation scenarios.
 
 ## Setup
 
-Create and activate the submission environment:
+Create and activate the conda environment:
 
 ```bash
-conda env create -f environment.yml
+make create-env
 conda activate ace-aimip
 ```
 
-This installs `fme` (for config validation) and `beaker-gantry` (for job submission).
+This installs `fme` (for config validation), `beaker-gantry` (for job submission), and `cftime` (for postprocessing).
 
 ## Workflow
 

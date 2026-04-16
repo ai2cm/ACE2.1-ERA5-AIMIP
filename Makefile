@@ -2,6 +2,9 @@ ENVIRONMENT_NAME = ace-aimip
 POSTPROCESS_DIR = scripts/aimip_postprocessing
 LOCAL_DIR = /tmp/aimip-ace/
 
+create-env:
+	conda env create -f environment.yml
+
 train:
 	bash scripts/run-ace-train.sh
 
@@ -24,4 +27,4 @@ test:
 clean:
 	rm -rf $(LOCAL_DIR)
 
-.PHONY: train evaluate fine-tune inference postprocess test clean
+.PHONY: create-env train evaluate fine-tune inference postprocess test clean
