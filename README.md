@@ -79,3 +79,35 @@ checkpoint:
 
 Configs: `ace-aimip-inference-config.yaml`, `ace-aimip-inference-p2k-config.yaml`,
 `ace-aimip-inference-p4k-config.yaml`.
+
+### 6. Postprocess inference outputs
+
+```bash
+cd scripts/aimip_postprocessing
+make postprocess
+```
+
+(Or `python postprocess.py --help` for full options.)
+
+Converts the raw 6-hourly inference outputs from step 5 into CMIP6-compliant daily and monthly
+mean NetCDF files. Transformations include: time coordinate standardization, stacking of
+per-level variables into a single 3D array along a `plev` or `model_layer` dimension, coordinate
+bounds computation, CF metadata assignment, and CMIP6 global attribute assignment.
+
+Key options:
+
+| Option | Description |
+|---|---|
+| `--raw-results-dir` | Directory containing raw inference outputs (required) |
+| `--processed-results-dir` | GCS destination for processed results |
+| `--output-version` | Version string in output paths (default: `v20251130`) |
+| `--simulation NAME` | Process a single simulation instead of all 15 |
+| `--skip-gcs-upload` | Write locally only, skip GCS upload |
+
+Output files follow the CMIP6 Data Reference Syntax:
+
+```
+{local_dir}/{experiment_id}/{variant_label}/{table_id}/{varname}/{grid_label}/{version}/{filename}.nc
+```
+
+Run `make test` to execute the unit test suite for the postprocessing helpers.
