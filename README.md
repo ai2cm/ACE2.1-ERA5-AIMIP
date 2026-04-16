@@ -18,13 +18,13 @@ This installs `fme` (for config validation) and `beaker-gantry` (for job submiss
 
 ## Workflow
 
-The full experiment proceeds in five stages. Checkpoint IDs embedded in the scripts must be updated
+The full experiment proceeds in six stages. Checkpoint IDs embedded in the scripts must be updated
 manually after evaluating each stage.
 
 ### 1. Train
 
 ```bash
-bash scripts/run-ace-train.sh
+make train
 ```
 
 Trains 4 random-seed ensemble members (RS0–RS3) on ERA5 1979–2008, with validation on 2009–2014.
@@ -33,8 +33,7 @@ Config: `ace-train-config.yaml`.
 ### 2. Evaluate training seeds
 
 ```bash
-bash scripts/run-ace-evaluator-seed-selection.sh
-bash scripts/run-ace-evaluator-seed-selection-single.sh
+make evaluate
 ```
 
 Evaluate all 4 trained checkpoints to select the best seed for fine-tuning.
@@ -51,7 +50,7 @@ in `run-ace-fine-tune-decoder-pressure-levels.sh`.
 ### 3. Fine-tune
 
 ```bash
-bash scripts/run-ace-fine-tune-decoder-pressure-levels.sh
+make fine-tune
 ```
 
 Freezes the best trained checkpoint and trains a secondary MLP decoder for 65 pressure-level
@@ -59,6 +58,10 @@ diagnostic variables (TMP, Q, UGRD, VGRD, h at 13 pressure levels plus near-surf
 4 new random seeds. Config: `ace-fine-tune-pressure-level-separate-decoder-config.yaml`.
 
 ### 4. Evaluate fine-tuned seeds
+
+```bash
+make evaluate
+```
 
 Re-run both evaluator scripts from step 2. The scripts already include checkpoint IDs for both
 the trained and fine-tuned ensemble members, enabling direct comparison. After evaluating seeds
@@ -68,7 +71,7 @@ checkpoint ID is used in `run-ace-inference.sh`.
 ### 5. Run inference
 
 ```bash
-bash scripts/run-ace-inference.sh
+make inference
 ```
 
 Runs 15 parallel 46-year simulations (1978-10-01 to 2024-12-31) using the best fine-tuned
