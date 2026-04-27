@@ -102,11 +102,16 @@ NetCDF4, CF-convention compliant, with CMIP6-standard variable names, units, and
 
 ### File Naming Convention
 
-Files follow the CMIP6 Data Reference Syntax (DRS) and are organized into version-tagged subdirectories:
+Files follow the CMIP6 Data Reference Syntax (DRS), organized in a nested directory hierarchy:
 
 ```
-{varname}_{table_id}_ACE2-ERA5_{experiment_id}_{variant_label}_{grid_label}_{version}/
-    {varname}_{table_id}_ACE2-ERA5_{experiment_id}_{variant_label}_{grid_label}_{start}-{end}.nc
+{experiment_id}/{variant_label}/{table_id}/{varname}/{grid_label}/{version}/{filename}.nc
+```
+
+where `{filename}` is:
+
+```
+{varname}_{table_id}_ACE2-ERA5_{experiment_id}_{variant_label}_{grid_label}_{start}-{end}.nc
 ```
 
 | Field | Values |
@@ -121,16 +126,13 @@ Files follow the CMIP6 Data Reference Syntax (DRS) and are organized into versio
 **Examples:**
 ```
 # Monthly temperature at standard pressure levels (full period)
-ta_Amon_ACE2-ERA5_aimip_r1i1p1f1_gr_v20251130/
-    ta_Amon_ACE2-ERA5_aimip_r1i1p1f1_gr_197810-202412.nc
+aimip/r1i1p1f1/Amon/ta/gr/v20251130/ta_Amon_ACE2-ERA5_aimip_r1i1p1f1_gr_197810-202412.nc
 
 # Monthly near-surface temperature (full period)
-tas_Amon_ACE2-ERA5_aimip_r1i1p1f1_gn_v20251130/
-    tas_Amon_ACE2-ERA5_aimip_r1i1p1f1_gn_197810-202412.nc
+aimip/r1i1p1f1/Amon/tas/gn/v20251130/tas_Amon_ACE2-ERA5_aimip_r1i1p1f1_gn_197810-202412.nc
 
-# Daily temperature at pressure levels (spinup sub-period)
-ta_day_ACE2-ERA5_aimip-p2k_r3i1p1f1_gr_v20251130/
-    ta_day_ACE2-ERA5_aimip-p2k_r3i1p1f1_gr_197810-197912.nc
+# Daily temperature at pressure levels, +2K scenario (spinup sub-period)
+aimip-p2k/r3i1p1f1/day/ta/gr/v20251130/ta_day_ACE2-ERA5_aimip-p2k_r3i1p1f1_gr_19781001-19791231.nc
 ```
 
 ### Dataset Size
@@ -147,7 +149,7 @@ import glob
 
 # Monthly near-surface temperature (full period, native grid)
 ds = xr.open_dataset(
-    "tas_Amon_ACE2-ERA5_aimip_r1i1p1f1_gn_v20251130/"
+    "aimip/r1i1p1f1/Amon/tas/gn/v20251130/"
     "tas_Amon_ACE2-ERA5_aimip_r1i1p1f1_gn_197810-202412.nc"
 )
 tas = ds["tas"]  # shape: (time, lat, lon)
@@ -155,20 +157,20 @@ tas = ds["tas"]  # shape: (time, lat, lon)
 # Monthly temperature at standard pressure levels (full period)
 # All 13 pressure levels are stacked along the plev dimension
 ds3d = xr.open_dataset(
-    "ta_Amon_ACE2-ERA5_aimip_r1i1p1f1_gr_v20251130/"
+    "aimip/r1i1p1f1/Amon/ta/gr/v20251130/"
     "ta_Amon_ACE2-ERA5_aimip_r1i1p1f1_gr_197810-202412.nc"
 )
 ta = ds3d["ta"]  # shape: (time, plev, lat, lon)
 print(ta.plev.values)  # pressure levels in Pa
 
 # Load all 5 ensemble members for the baseline scenario
-files = sorted(glob.glob("tas_Amon_ACE2-ERA5_aimip_r*i1p1f1_gn_*/tas_*.nc"))
+files = sorted(glob.glob("aimip/r*i1p1f1/Amon/tas/gn/*/tas_*.nc"))
 ds_ens = xr.open_mfdataset(files, concat_dim="member", combine="nested")
 
 # Daily data is available for two sub-periods only
 ds_day = xr.open_dataset(
-    "tas_day_ACE2-ERA5_aimip_r1i1p1f1_gn_v20251130/"
-    "tas_day_ACE2-ERA5_aimip_r1i1p1f1_gn_197810-197912.nc"  # spinup period
+    "aimip/r1i1p1f1/day/tas/gn/v20251130/"
+    "tas_day_ACE2-ERA5_aimip_r1i1p1f1_gn_19781001-19791231.nc"  # spinup period
 )
 ```
 
