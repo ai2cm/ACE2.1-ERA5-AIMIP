@@ -114,3 +114,50 @@ Output files follow the CMIP6 Data Reference Syntax:
 ```
 
 Run `make test-postprocess` to execute the unit test suite for the postprocessing helpers.
+
+## ACE2.2-ERA5
+
+A second evaluated checkpoint, **ACE2.2-ERA5** (CMIP source_id `ACE2-2-ERA5`), runs the same
+AIMIP inference/postprocessing workflow for a substantially revised recipe: 1° **daily-06Z**
+timestep, v2 ERA5-only training recipe with revised normalization and module hyperparameters,
+non-residual prediction, and no CO₂ input. Its configs live in `configs/ace2.2-era5/` and its
+launchers in `scripts/run-ace2.2-*.sh`.
+
+### Evaluated checkpoints
+
+| Model | Core training | Beaker checkpoint dataset | ACE code ref |
+|---|---|---|---|
+| ACE2.1-ERA5 | `ace-aimip-train-rs3` + PL-decoder fine-tune RS0 | `01KAKXY0EK24K7BZK2N8SPJ5SJ` | `70c966ed5` |
+| ACE2.2-ERA5 | wandb `ai2cm/ace/nobgd4ek` (`01KXKBKW2DCAYX6Q3FRJ60K3Q6`) + PL-decoder fine-tune (see below) | set in `scripts/run-ace2.2-inference.sh` after stage 3 | `632ca493e` |
+
+The ACE2.2 core was trained on ai2cm/ace branch
+`experiment/2026-07-15-1deg-daily-v2-era5-only-no-residual-no-co2` @ `f9f91c9` (beaker experiment
+`01KXKBKVTVPPQHBY4DRAQ8NHH1`); stages 1–2 of the six-stage workflow above are replaced by that
+training run. The remaining ACE2.2 stages are:
+
+### 1. Build fine-tune inputs
+
+```bash
+bash scripts/run-ace2.2-build-plev-companion.sh
+```
+
+One beaker job that (a) subsamples the 6-hourly ERA5 pressure-level zarr to the core's daily-06Z
+cadence (valid because all 65 pressure-level variables are instantaneous snapshots), (b) computes
+its 1990–2019 normalization stats, and (c) merges those with the core's own daily training stats.
+The job's beaker **result dataset** is the merged stats dataset; note its ID.
+Configs: `configs/ace2.2-era5/data-process/`.
+
+### 2. Fine-tune the pressure-level decoder
+
+```bash
+bash scripts/run-ace2.2-fine-tune-decoder-pressure-levels.sh   # set MERGED_STATS_DATASET first
+```
+
+Single seed (the frozen core is identical across seeds). Config:
+`configs/ace2.2-era5/ace-fine-tune-pressure-level-separate-decoder-config.yaml` — see its header
+for the daily-cadence adaptations relative to the ACE2.1 fine-tune.
+
+### 3. Evaluate the fine-tuned checkpoint
+
+Check wandb validation loss and inline-inference time-mean maps; note the fine-tune's beaker
+result dataset ID and set it as `EXISTING_RESULTS_DATASET` in `scripts/run-ace2.2-inference.sh`.

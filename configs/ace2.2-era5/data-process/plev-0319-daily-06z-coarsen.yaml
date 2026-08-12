@@ -1,0 +1,70 @@
+runs:
+  2026-03-19-era5-1deg-8layer-1940-2025: ''
+data_output_directory: /climate-default
+stats:
+  output_directory: /climate-default/2026-08-06-era5-1deg-plev-daily-06z-stats-1990-2019
+  data_type: ERA5
+  start_date: '1990-01-01'
+  end_date: '2019-12-31'
+time_coarsen:
+  factor: 4
+  data_output_directory: /climate-default/2026-08-06-era5-1deg-plev-daily-06z-1940-2025
+  stats_output_directory: /climate-default/2026-08-06-era5-1deg-plev-daily-06z-stats-1990-2019
+  snapshot_names:
+  - TMP10
+  - TMP50
+  - TMP100
+  - TMP200
+  - TMP250
+  - TMP500
+  - TMP700
+  - TMP850
+  - TMP1000
+  - Q10
+  - Q50
+  - Q100
+  - Q200
+  - Q250
+  - Q500
+  - Q700
+  - Q850
+  - Q1000
+  - UGRD10
+  - UGRD50
+  - UGRD100
+  - UGRD200
+  - UGRD250
+  - UGRD500
+  - UGRD700
+  - UGRD850
+  - UGRD1000
+  - VGRD10
+  - VGRD50
+  - VGRD100
+  - VGRD200
+  - VGRD250
+  - VGRD500
+  - VGRD700
+  - VGRD850
+  - VGRD1000
+  - h10
+  - h50
+  - h100
+  - h200
+  - h250
+  - h300
+  - h500
+  - h700
+  - h850
+  - h1000
+  window_names: []
+  constant_prefixes: []
+  n_split: 48
+  chunking:
+    time: 1
+    latitude: 180
+    longitude: 360
+  sharding:
+    time: 360
+    latitude: 180
+    longitude: 360

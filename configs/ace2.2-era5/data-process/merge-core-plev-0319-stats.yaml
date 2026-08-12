@@ -1,0 +1,6 @@
+input_directories:
+- /climate-default/2026-03-19-era5-1deg-8layer-daily-stats-1990-2019/2026-03-19-era5-1deg-8layer-1940-2025
+- /climate-default/2026-08-06-era5-1deg-plev-daily-06z-stats-1990-2019/2026-03-19-era5-1deg-8layer-1940-2025
+output_directory: /results
+latitude_dim: latitude
+longitude_dim: longitude
