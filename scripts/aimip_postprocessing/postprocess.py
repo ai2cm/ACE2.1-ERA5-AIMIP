@@ -7,6 +7,7 @@ and uploads the results to GCS.
 import argparse
 import dataclasses
 import datetime
+import functools
 import logging
 import os
 import re
@@ -89,6 +90,7 @@ def assign_global_attrs(
     grid: str,
     grid_label: str,
     realization_index: int,
+    source: str,
     source_id: str,
     table_id: str,
     title: str,
@@ -129,7 +131,7 @@ def assign_global_attrs(
             "variability and forced responses. npj Clim Atmos Sci 8, 205 (2025). "
             "https://doi.org/10.1038/s41612-025-01090-0"
         ),
-        "source": "ACE2-ERA5: ACE (Ai2 climate emulator) version 2 trained on ERA5",
+        "source": source,
         "source_id": source_id,
         "source_type": "AGCM",
         "sub_experiment": "none",
@@ -282,10 +284,11 @@ def monthly_data_time_coord(ds: xr.Dataset) -> xr.Dataset:
     return ds.assign_coords({"time": month_starts})
 
 
-def daily_data_time_coord(ds: xr.Dataset) -> xr.Dataset:
-    """ACE data writer averaging over 0, 6, 12, 18Z outputs results in a daily time
-    coordinate at 9Z. Shift these to 0Z."""
-    day_starts = ds["time"].values - datetime.timedelta(hours=9)
+def daily_data_time_coord(ds: xr.Dataset, shift_hours: int = 9) -> xr.Dataset:
+    """Shift the ACE data writer's daily time coordinate to 0Z. For a 6-hourly
+    model, averaging over 0, 6, 12, 18Z stamps daily data at 9Z (shift 9 hours);
+    for a daily-06Z model each day is a single 06Z sample (shift 6 hours)."""
+    day_starts = ds["time"].values - datetime.timedelta(hours=shift_hours)
     return ds.assign_coords({"time": day_starts})
 
 
@@ -403,9 +406,39 @@ def encode_time_coords(
     return ds
 
 
+def _upload_with_gcsfs(local_path: str, gcs_path: str) -> None:
+    # fsspec/gcsfs upload (uses GOOGLE_APPLICATION_CREDENTIALS / ADC). Mirrors
+    # `gsutil cp -r <local> <dest>`: the local dir's contents land under
+    # <dest>/<basename(local)>/. Uploaded file-by-file so repeated calls MERGE
+    # into an existing destination (postprocess uploads once per simulation);
+    # fs.put(dir, existing_dir, recursive=True) would re-nest instead.
+    fs = fsspec.filesystem("gs")
+    base = os.path.basename(local_path.rstrip("/"))
+    dest_root = gcs_path.rstrip("/") + "/" + base
+    for root, _dirs, files in os.walk(local_path):
+        for fn in files:
+            lp = os.path.join(root, fn)
+            rel = os.path.relpath(lp, local_path)
+            fs.put_file(lp, f"{dest_root}/{rel}")
+
+
 def upload_to_gcs(local_path: str, gcs_path: str) -> None:
-    cmd = ["gsutil", "-m", "cp", "-r", local_path, gcs_path]
-    subprocess.run(cmd, check=True, capture_output=True, text=True)
+    # Prefer gsutil when present AND authenticated (fast, parallel); fall back to
+    # gcsfs otherwise — e.g. a container that ships gsutil but without gcloud
+    # credentials configured, only GOOGLE_APPLICATION_CREDENTIALS set.
+    if shutil.which("gsutil") is not None:
+        try:
+            subprocess.run(
+                ["gsutil", "-m", "cp", "-r", local_path, gcs_path],
+                check=True, capture_output=True, text=True,
+            )
+            return
+        except subprocess.CalledProcessError as e:
+            logger.warning(
+                "gsutil upload failed (%s); falling back to gcsfs. stderr:\n%s",
+                e.returncode, (e.stderr or "")[-500:],
+            )
+    _upload_with_gcsfs(local_path, gcs_path)
 
 
 # --- CLI ---
@@ -464,6 +497,31 @@ def _get_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip uploading results to GCS.",
     )
+    parser.add_argument(
+        "--model-source-name",
+        default=MODEL_SOURCE_NAME,
+        help=(
+            "CMIP source_id used in raw/output filenames and global attributes "
+            "(e.g. ACE2-ERA5, ACE2-2-ERA5)."
+        ),
+    )
+    parser.add_argument(
+        "--source-description",
+        default=None,
+        help=(
+            "CMIP 'source' global attribute. Defaults to the ACE2-ERA5 description "
+            "when --model-source-name is ACE2-ERA5; otherwise this must be provided."
+        ),
+    )
+    parser.add_argument(
+        "--daily-time-shift-hours",
+        type=int,
+        default=9,
+        help=(
+            "Hours to shift the data writer's daily time stamps back to 0Z: 9 for a "
+            "6-hourly model (0/6/12/18Z mean stamped 9Z), 6 for a daily-06Z model."
+        ),
+    )
     return parser
 
 
@@ -472,6 +530,17 @@ def main(args: argparse.Namespace) -> None:
         raise ValueError(
             "--processed-results-dir is required when --skip-gcs-upload is not set."
         )
+    if args.source_description is None:
+        if args.model_source_name != MODEL_SOURCE_NAME:
+            raise ValueError(
+                "--source-description is required when --model-source-name is not "
+                f"{MODEL_SOURCE_NAME}."
+            )
+        source_description = (
+            "ACE2-ERA5: ACE (Ai2 climate emulator) version 2 trained on ERA5"
+        )
+    else:
+        source_description = args.source_description
 
     simulations = load_simulation_configs(args.simulations_file)
     files = load_file_configs(args.files_file)
@@ -510,12 +579,15 @@ def main(args: argparse.Namespace) -> None:
             else:
                 raise ValueError(f"Invalid grid_label: {fc.grid_label}")
 
+            standardize_time_coord: Callable[[xr.Dataset], xr.Dataset]
             if fc.table_id == "Amon":
                 frequency = "mon"
                 standardize_time_coord = monthly_data_time_coord
             elif fc.table_id == "day":
                 frequency = "day"
-                standardize_time_coord = daily_data_time_coord
+                standardize_time_coord = functools.partial(
+                    daily_data_time_coord, shift_hours=args.daily_time_shift_hours
+                )
             else:
                 raise ValueError(f"Invalid table_id: {fc.table_id}")
 
@@ -526,7 +598,7 @@ def main(args: argparse.Namespace) -> None:
             filename = FILENAME_TEMPLATE.format(
                 varname=fc.varname,
                 table_id=fc.table_id,
-                source=MODEL_SOURCE_NAME,
+                source=args.model_source_name,
                 experiment_id=sim.experiment_id,
                 variant_label=variant_label,
                 grid_label=fc.grid_label,
@@ -567,7 +639,8 @@ def main(args: argparse.Namespace) -> None:
                     grid=grid_description,
                     grid_label=fc.grid_label,
                     realization_index=sim.realization_index,
-                    source_id=MODEL_SOURCE_NAME,
+                    source=source_description,
+                    source_id=args.model_source_name,
                     table_id=fc.table_id,
                     title=filename,
                     tracking_id=tracking_id,

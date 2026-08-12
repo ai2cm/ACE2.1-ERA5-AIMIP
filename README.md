@@ -171,3 +171,16 @@ bash scripts/run-ace2.2-inference.sh
 Same 15-job matrix as ACE2.1 (5 ICs × baseline/+2K/+4K), with daily ICs and forcing from
 `/climate-default/2026-07-20-aimip-evaluation-daily/` and 16894 daily steps
 (1978-09-30 → 2024-12-31).
+
+### 5. Postprocess
+
+```bash
+make postprocess ARGS="--raw-results-dir ... --processed-results-dir ... \
+    --simulations-file simulations-ace2.2.yaml \
+    --model-source-name ACE2-2-ERA5 \
+    --source-description 'ACE2-2-ERA5: ACE (Ai2 climate emulator) version 2.2 trained on ERA5' \
+    --daily-time-shift-hours 6 --output-version v20260808"
+```
+
+`--daily-time-shift-hours 6` accounts for the daily model's single 06Z sample per day (the
+6-hourly model's 0/6/12/18Z daily means are stamped 9Z, hence the default of 9).
