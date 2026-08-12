@@ -27,10 +27,13 @@ ace2.2-build-plev-companion:
 ace2.2-fine-tune:
 	bash scripts/run-ace2.2-fine-tune-decoder-pressure-levels.sh
 
+ace2.2-inference:
+	bash scripts/run-ace2.2-inference.sh
+
 test-postprocess:
 	cd $(POSTPROCESS_DIR) && conda run -n $(ENVIRONMENT_NAME) python -m pytest test_postprocess.py -v --noconftest
 
 clean:
 	rm -rf $(LOCAL_DIR)
 
-.PHONY: create-env train evaluate fine-tune inference postprocess test-postprocess clean ace2.2-build-plev-companion ace2.2-fine-tune
+.PHONY: create-env train evaluate fine-tune inference postprocess test-postprocess clean ace2.2-build-plev-companion ace2.2-fine-tune ace2.2-inference

@@ -161,3 +161,13 @@ for the daily-cadence adaptations relative to the ACE2.1 fine-tune.
 
 Check wandb validation loss and inline-inference time-mean maps; note the fine-tune's beaker
 result dataset ID and set it as `EXISTING_RESULTS_DATASET` in `scripts/run-ace2.2-inference.sh`.
+
+### 4. Run inference
+
+```bash
+bash scripts/run-ace2.2-inference.sh
+```
+
+Same 15-job matrix as ACE2.1 (5 ICs × baseline/+2K/+4K), with daily ICs and forcing from
+`/climate-default/2026-07-20-aimip-evaluation-daily/` and 16894 daily steps
+(1978-09-30 → 2024-12-31).
