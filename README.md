@@ -114,3 +114,20 @@ Output files follow the CMIP6 Data Reference Syntax:
 ```
 
 Run `make test-postprocess` to execute the unit test suite for the postprocessing helpers.
+
+## ACE2.2-ERA5
+
+A second evaluated checkpoint, **ACE2.2-ERA5** (CMIP `source_id` `ACE2-2-ERA5`), runs the same
+inference/postprocessing workflow for a revised recipe: 1° 6-hourly timestep, v2 ERA5-only
+training with revised normalization and module hyperparameters, non-residual prediction, and no
+CO₂ input. Configs are in `configs/ace2.2-era5/`, launchers in `scripts/run-ace2.2-6h-*.sh`.
+
+Training replaces stages 1–4 above with three stages, whose configs are kept here under
+`configs/ace2.2-era5/training/` and launched from `scripts/run-ace2.2-6h-train.sh`: pretrain
+(1-step), multi-step fine-tune, and pressure-level decoder fine-tune. Each stage mounts the
+previous stage's beaker result dataset, declared in a `# arg:` header in its config.
+
+The ACE2.2 launchers pin their own deps-only beaker image in
+`configs/ace2.2-era5/deps_only_image.txt`; the ACE2.1 launchers keep the repo-root
+`latest_deps_only_image.txt`. Both models stay reproducible against the image they were
+actually run under.
