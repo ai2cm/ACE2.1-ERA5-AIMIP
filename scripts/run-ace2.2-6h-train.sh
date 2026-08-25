@@ -100,4 +100,8 @@ launch_training () {
 # --- Stage 3: pressure-level decoder fine-tuning ---
 # Adds ta/hus/ua/va at the 7 AIMIP evaluation levels (1000/850/700/500/250/100/50 hPa)
 # via a secondary decoder head, with the core frozen (~20k trainable parameters).
+# Ran as beaker 01M0TQP4447HF0J96D7FWQ02V6 / wandb lmvpfmrp across 3 preempted attempts,
+# stopped by hand at epoch 35: inference error had no trend across 17 evaluations
+# (0.0309-0.0335). Result dataset 01M0WVHBW4G5H2M2NZ25REP8G4; its best_inference_ckpt.tar
+# is the epoch-32 checkpoint (0.030889) that AIMIP inference mounts.
 # launch_training "$BASE_NAME-plev-ft.yaml" "ace22-era5-6h-plev-fine-tuning-rs0"

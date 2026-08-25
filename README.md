@@ -131,3 +131,19 @@ The ACE2.2 launchers pin their own deps-only beaker image in
 `configs/ace2.2-era5/deps_only_image.txt`; the ACE2.1 launchers keep the repo-root
 `latest_deps_only_image.txt`. Both models stay reproducible against the image they were
 actually run under.
+
+ACE2.2 is stochastic, so the five AIMIP realizations share one initial condition and differ only
+by `seed`; ACE2.1 needed lagged ICs because it was deterministic.
+
+### Run inference
+
+```bash
+bash scripts/run-ace2.2-6h-inference-smoke.sh
+bash scripts/run-ace2.2-6h-inference.sh
+```
+
+15 jobs (5 realizations × baseline/+2K/+4K), 67576 6-hourly steps (1978-09-30T18Z → 2024-12-31T18Z).
+Run the smoke job first and confirm the raw output carries every `files.yaml` entry and all 7
+pressure levels. Before postprocessing the full sweep, check the five realizations actually differ
+— identical global-mean `tas` means the seeding did not take, and nothing downstream flags a
+zero-spread ensemble.
