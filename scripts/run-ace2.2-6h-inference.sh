@@ -35,7 +35,7 @@ if [ -z "$PLEV_FT_RESULTS_DATASET" ]; then
 fi
 
 # ai2cm/ace commit the checkpoint was trained at (exp/2026-08-12-aimip-1deg-6hourly).
-ACE_GIT_REF="fa856b459"
+ACE_GIT_REF="fa856b459dc6c25b4d13b8e927d258aa7cefe543"
 OUTPUT_ROOT="${OUTPUT_ROOT:-/climate-default/2026-08-25-ace22-era5-6h-aimip-inference-results}"
 IC_PATH="/climate-default/2026-08-24-aimip-evaluation/aimip-evaluation-ics/1978-09-30_IC0.nc"
 BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')

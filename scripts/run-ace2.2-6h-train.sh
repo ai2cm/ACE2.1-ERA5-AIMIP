@@ -31,7 +31,7 @@ BASE_NAME="train-1deg-6hourly-v2-era5-only-no-residual-no-co2"
 
 # ai2cm/ace commit the configs were run at. The 6-hourly configs live on the
 # exp/2026-08-12-aimip-1deg-6hourly branch there; this is its tip.
-ACE_GIT_REF="fa856b459"
+ACE_GIT_REF="fa856b459dc6c25b4d13b8e927d258aa7cefe543"
 
 BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')
 # wandb runs on a service-account key, so this is the only thing attributing them
