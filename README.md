@@ -147,3 +147,16 @@ Run the smoke job first and confirm the raw output carries every `files.yaml` en
 pressure levels. Before postprocessing the full sweep, check the five realizations actually differ
 — identical global-mean `tas` means the seeding did not take, and nothing downstream flags a
 zero-spread ensemble.
+
+### Postprocess
+
+```bash
+bash scripts/run-ace2.2-6h-mirror-raw-results.sh   # weka -> GCS; postprocess.py runs locally
+make postprocess ARGS="--raw-results-dir gs://... --processed-results-dir gs://... \
+    --simulations-file simulations-ace2.2-6h.yaml \
+    --model-source-name ACE2-2-ERA5 \
+    --source-description 'ACE2-2-ERA5: ACE (Ai2 climate emulator) version 2.2 trained on ERA5' \
+    --output-version vYYYYMMDD"
+```
+
+`--daily-time-shift-hours` keeps its default of 9 (the 0/6/12/18Z daily mean is stamped 9Z).
