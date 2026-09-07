@@ -9,10 +9,10 @@ set -e
 # service-account credentials; uses the Cloud SDK image for gcloud storage.
 
 # Override RESULTS_NAME to mirror a different directory, e.g. the SMOKE output.
-RESULTS_NAME="${RESULTS_NAME:-2026-08-25-ace22-era5-6h-aimip-inference-results}"
+RESULTS_NAME="${RESULTS_NAME:-2026-09-07-ace22-era5-6h-rs3-aimip-inference-results}"
 SRC="/climate-default/${RESULTS_NAME}"
 DEST="gs://vcm-ml-intermediate/${RESULTS_NAME}"
-JOB_NAME="${JOB_NAME:-ace22-era5-6h-aimip-mirror-raw-results}"
+JOB_NAME="${JOB_NAME:-ace22-era5-6h-rs3-aimip-mirror-raw-results}"
 
 SPEC=$(mktemp /tmp/mirror-spec-XXXX.yaml)
 cat > "$SPEC" <<EOF

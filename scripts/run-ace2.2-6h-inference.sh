@@ -11,32 +11,37 @@ export GRPC_VERBOSITY=ERROR
 # dimension, breaking the one-realization-per-job assumption in the realization
 # label rewrite below, simulations-ace2.2-6h.yaml and the postprocessing.
 #
-# Jobs are --preemptible: inference is not resumable, but each run is short, so a
-# preemption costs only a from-scratch redo while preemptible slots avoid
-# serializing the 15 jobs behind quota.
+# Jobs carry --min-runtime 8h. Last month's 15 ran 75-320 min each (median ~2 h) and,
+# under the since-deprecated --preemptible, 8 of them were killed at least once -- one
+# nine times -- discarding 57% of the GPU-hours spent. Inference is not resumable, so
+# the guarantee has to cover the slowest observed run, and a longer request costs
+# nothing under the current scheduler.
 
 # Knobs the smoke wrapper overrides; defaults are the production 15-job sweep.
-JOB_NAME_BASE="${JOB_NAME_BASE:-ace22-era5-6h-aimip-inference-oct-1978-2024}"
-JOB_GROUP="${JOB_GROUP:-ace22-era5-6h-aimip}"
+JOB_NAME_BASE="${JOB_NAME_BASE:-ace22-era5-6h-rs3-aimip-inference-oct-1978-2024}"
+JOB_GROUP="${JOB_GROUP:-ace22-era5-6h-rs3-aimip}"
 EXPERIMENTS="${EXPERIMENTS:-control p2k p4k}"
 MEMBERS="${MEMBERS:-1 2 3 4 5}"
 EXTRA_OVERRIDE="${EXTRA_OVERRIDE:-}"
-PREEMPTION_FLAG="${PREEMPTION_FLAG:---preemptible}"
+MIN_RUNTIME="${MIN_RUNTIME:-8h}"
 
 # Stage-3 pressure-level FT result dataset. The stage-2 checkpoint cannot serve here:
 # these configs request pressure-level outputs only the fine-tuned decoder produces.
-# Stopped by hand at epoch 35 rather than at the early-stopping criterion: inference
-# error had no trend across 17 evaluations (0.0309-0.0335), so later "improvements"
-# would select noise. best_inference_ckpt.tar is the epoch-32 checkpoint, 0.030889.
-PLEV_FT_RESULTS_DATASET="01M0WVHBW4G5H2M2NZ25REP8G4"  # stage-3 plev FT (wandb lmvpfmrp)
+# Training seed 3 of the four-seed ACE2.2 ensemble, chosen on the 36-year in-sample
+# rollouts (first on 11 of 12 basis x metric combinations; see the findings report in
+# explore2/brianh/2026-08-26-ace22-variants-findings). best_inference_ckpt.tar is the
+# epoch-42 checkpoint of 50, best_inference_error 0.036006. Supersedes seed 0's
+# 01M0WVHBW4G5H2M2NZ25REP8G4 (epoch 32, wandb lmvpfmrp), evaluated as v20260825.
+PLEV_FT_RESULTS_DATASET="01M1WBBJDFYA9VS46V6HH3K1MW"  # stage-3 plev FT, seed 3 (wandb dd0f9jnb)
 if [ -z "$PLEV_FT_RESULTS_DATASET" ]; then
     echo "ERROR: set PLEV_FT_RESULTS_DATASET to the stage-3 plev FT result dataset ID" >&2
     exit 1
 fi
 
-# ai2cm/ace commit the checkpoint was trained at (exp/2026-08-12-aimip-1deg-6hourly).
-ACE_GIT_REF="fa856b459dc6c25b4d13b8e927d258aa7cefe543"
-OUTPUT_ROOT="${OUTPUT_ROOT:-/climate-default/2026-08-25-ace22-era5-6h-aimip-inference-results}"
+# ai2cm/ace commit the checkpoint was trained at (exp/2026-08-28-ace22-variants). Its
+# fme/ tree is byte-identical to fa856b459, the ref the seed-0 runs used.
+ACE_GIT_REF="394e41b5e07d1a3606d51faea1bd09a6fbddb492"
+OUTPUT_ROOT="${OUTPUT_ROOT:-/climate-default/2026-09-07-ace22-era5-6h-rs3-aimip-inference-results}"
 IC_PATH="/climate-default/2026-08-24-aimip-evaluation/aimip-evaluation-ics/1978-09-30_IC0.nc"
 BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')
 WANDB_IDENTITY="bhenn1983"  # differs from BEAKER_USERNAME; do not derive one from the other
@@ -69,7 +74,7 @@ launch_job () {
         --beaker-image "$(cat $REPO_ROOT/configs/ace2.2-era5/deps_only_image.txt)" \
         --workspace ai2/ace \
         --priority high \
-        $PREEMPTION_FLAG \
+        --min-runtime "$MIN_RUNTIME" \
         --cluster ai2/titan-cirrascale \
         --cluster ai2/jupiter-cirrascale-2 \
         --env WANDB_USERNAME=$WANDB_IDENTITY \
