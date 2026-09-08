@@ -664,9 +664,10 @@ def main(args: argparse.Namespace) -> None:
         if not args.skip_gcs_upload:
             logger.info("Uploading data to GCS for simulation %s.", sim.name)
             upload_to_gcs(args.local_dir, args.processed_results_dir)
-
-        logger.info("Deleting local data for simulation %s.", sim.name)
-        shutil.rmtree(args.local_dir)
+            # Only the staging copy is disposable. With --skip-gcs-upload the local tree
+            # IS the output, so deleting it here would leave nothing behind.
+            logger.info("Deleting local staging data for simulation %s.", sim.name)
+            shutil.rmtree(args.local_dir)
 
 
 if __name__ == "__main__":

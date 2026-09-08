@@ -105,7 +105,7 @@ Key options:
 | `--processed-results-dir` | GCS destination for processed results |
 | `--output-version` | Version string in output paths (default: `v20251130`) |
 | `--simulation NAME` | Process a single simulation instead of all 15 |
-| `--skip-gcs-upload` | Write locally only, skip GCS upload |
+| `--skip-gcs-upload` | Write locally only; `--local-dir` is the output and is not deleted |
 
 Output files follow the CMIP6 Data Reference Syntax:
 
@@ -150,13 +150,34 @@ zero-spread ensemble.
 
 ### Postprocess
 
+**Copy the raw results to local disk first.** `postprocess.py` reads each file through fsspec,
+which streams from GCS single-threaded at ~5 MB/s -- around 150 s per file against ~3 s from
+local disk, and there are 56 raw files per member. `--raw-results-dir` takes a local path.
+
 ```bash
-bash scripts/run-ace2.2-6h-mirror-raw-results.sh   # weka -> GCS; postprocess.py runs locally
-make postprocess ARGS="--raw-results-dir gs://... --processed-results-dir gs://... \
+bash scripts/run-ace2.2-6h-mirror-raw-results.sh   # weka -> GCS (postprocess.py runs locally)
+gcloud storage cp -r "gs://vcm-ml-intermediate/<results-name>/<job-name>"-r{1..5} /scratch/raw/
+```
+
+Then run one process per simulation, five in parallel, writing straight into the evaluation
+repo's `local_data` so no upload round trip is needed:
+
+```bash
+make postprocess ARGS="--raw-results-dir /scratch/raw --simulation <job-name>-r1 \
     --simulations-file simulations-ace2.2-6h.yaml \
     --model-source-name ACE2-2-ERA5 \
     --source-description 'ACE2-2-ERA5: ACE (Ai2 climate emulator) version 2.2 trained on ERA5' \
-    --output-version vYYYYMMDD"
+    --output-version vYYYYMMDD --skip-gcs-upload \
+    --local-dir /path/to/AIMIP/local_data/Ai2/ACE2-2-ERA5/"
 ```
+
+Parallel runs are safe **only** with `--skip-gcs-upload`, which is also what leaves the output
+in place: otherwise each process deletes the shared `--local-dir` once its own upload finishes.
+It further avoids the upload's nesting behaviour, since `gsutil cp -r` writes the first
+simulation's tree at the destination root and every later one under an extra `aimip-ace/`
+level; archive the finished tree in one `gcloud storage rsync -r` pass instead.
+
+Confirm 48 files per member before evaluating -- `postprocess.py` exiting 0 does not mean the
+output is complete.
 
 `--daily-time-shift-hours` keeps its default of 9 (the 0/6/12/18Z daily mean is stamped 9Z).
