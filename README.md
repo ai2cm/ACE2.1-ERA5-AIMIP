@@ -127,7 +127,10 @@ Training replaces stages 1–4 above with three stages, whose configs are kept h
 (1-step), multi-step fine-tune, and pressure-level decoder fine-tune. As for ACE2.1, the first
 two stages ran for four training seeds and the pressure-level stage for the selected seed only
 (seed 3). Each stage mounts the same seed's previous-stage beaker result dataset, from per-seed
-tables in the launcher, which also records every run.
+tables in the launcher, which also records every run. The seed was selected with
+`scripts/run-ace2.2-6h-seed-selection.sh`, which applies ACE2.1's two seed-selection evaluations
+(configs `configs/ace2.2-era5/ace-evaluator-seed-selection*.yaml`) to the four stage-2
+checkpoints.
 
 The ACE2.2 launchers pin their own deps-only beaker image in
 `configs/ace2.2-era5/deps_only_image.txt`; the ACE2.1 launchers keep the repo-root
