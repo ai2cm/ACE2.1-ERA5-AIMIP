@@ -124,8 +124,10 @@ CO₂ input. Configs are in `configs/ace2.2-era5/`, launchers in `scripts/run-ac
 
 Training replaces stages 1–4 above with three stages, whose configs are kept here under
 `configs/ace2.2-era5/training/` and launched from `scripts/run-ace2.2-6h-train.sh`: pretrain
-(1-step), multi-step fine-tune, and pressure-level decoder fine-tune. Each stage mounts the
-previous stage's beaker result dataset, declared in a `# arg:` header in its config.
+(1-step), multi-step fine-tune, and pressure-level decoder fine-tune. As for ACE2.1, the first
+two stages ran for four training seeds and the pressure-level stage for the selected seed only
+(seed 3). Each stage mounts the same seed's previous-stage beaker result dataset, from per-seed
+tables in the launcher, which also records every run.
 
 The ACE2.2 launchers pin their own deps-only beaker image in
 `configs/ace2.2-era5/deps_only_image.txt`; the ACE2.1 launchers keep the repo-root
