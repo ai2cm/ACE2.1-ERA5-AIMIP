@@ -35,8 +35,8 @@ export GRPC_VERBOSITY=ERROR
 # stop short of the final epoch.
 #
 # ================================== run record ==================================
-# Every run used the configs in configs/ace2.2-era5/training/ (seed 0's stage 2 with an
-# earlier inline inference list; see that config's header), the beaker image in
+# Every run used the configs in configs/ace2.2-era5/training/ (all four stage-1 runs and seed 0's
+# stage 2 with an earlier inline inference list; see those configs' headers), the beaker image in
 # configs/ace2.2-era5/deps_only_image.txt, and ai2cm/ace code identical to ACE_GIT_REF.
 #
 # stage 1, 40 epochs
