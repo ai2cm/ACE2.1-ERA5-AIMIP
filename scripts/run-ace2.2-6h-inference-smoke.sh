@@ -8,11 +8,11 @@ set -e
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-JOB_NAME_BASE="ace22-era5-6h-rs3-aimip-inference-SMOKE" \
-JOB_GROUP="ace22-era5-6h-rs3-aimip" \
+JOB_NAME_BASE="ace22-no-gmr-diagnostic-near-surface-rs2-aimip-inference-SMOKE" \
+JOB_GROUP="ace22-no-gmr-diagnostic-near-surface-rs2-aimip" \
 EXPERIMENTS="control" \
 MEMBERS="1" \
 EXTRA_OVERRIDE="n_forward_steps=400" \
 MIN_RUNTIME="1h" \
-OUTPUT_ROOT="/climate-default/2026-09-07-ace22-era5-6h-rs3-aimip-inference-SMOKE" \
+OUTPUT_ROOT="/climate-default/2026-11-06-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-inference-SMOKE" \
     exec "$SCRIPT_DIR/run-ace2.2-6h-inference.sh"
