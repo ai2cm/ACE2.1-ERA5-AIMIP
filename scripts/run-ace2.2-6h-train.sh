@@ -10,10 +10,13 @@ export GRPC_VERBOSITY=ERROR
 #   3. pressure-level decoder fine-tuning, initialized from the same seed's stage-2
 #      best_inference_ckpt.tar, with the core frozen
 #
-# This supersedes the daily ACE2.2-ERA5 (wandb nobgd4ek), whose 06Z-snapshot output
-# could not meet AIMIP's evenly-sampled diurnal-average spec for surface fields.
-# Unlike that model, the 6-hourly core is trained entirely from configs in this
-# repo, so the whole pipeline is reproducible from here.
+# The stepper has no global mean removal, and TMP2m, Q2m, UGRD10m and VGRD10m are diagnosed
+# rather than prognostic, as in ACE2.5. This supersedes the earlier 6-hourly ACE2.2-ERA5
+# recipe, which had both (its configs and run record are in this repository's history at
+# bbb23aa), and before it the daily ACE2.2-ERA5 (wandb nobgd4ek), whose 06Z-snapshot output
+# could not meet AIMIP's evenly-sampled diurnal-average spec for surface fields. The 6-hourly
+# core is trained entirely from configs in this repo, so the whole pipeline is reproducible
+# from here.
 #
 # As for ACE2.1-ERA5, stages 1 and 2 ran for four training seeds (0-3), the seed was
 # chosen on 1979-2014 rollouts of the stage-2 checkpoints
@@ -24,7 +27,7 @@ export GRPC_VERBOSITY=ERROR
 # Usage:
 #   STAGE=1 SEEDS="0 1 2 3" bash scripts/run-ace2.2-6h-train.sh
 #   STAGE=2 SEEDS="0 1 2 3" bash scripts/run-ace2.2-6h-train.sh
-#   STAGE=3 SEEDS="3"       bash scripts/run-ace2.2-6h-train.sh
+#   STAGE=3 SEEDS="2"       bash scripts/run-ace2.2-6h-train.sh
 #   CLUSTER=jupiter STAGE=1 SEEDS="1" bash scripts/run-ace2.2-6h-train.sh
 #
 # Stages 2 and 3 mount the same seed's previous-stage result dataset from the
@@ -35,31 +38,35 @@ export GRPC_VERBOSITY=ERROR
 # stop short of the final epoch.
 #
 # ================================== run record ==================================
-# Every run used the configs in configs/ace2.2-era5/training/ (all four stage-1 runs and seed 0's
-# stage 2 with an earlier inline inference list; see those configs' headers), the beaker image in
-# configs/ace2.2-era5/deps_only_image.txt, and ai2cm/ace code identical to ACE_GIT_REF.
+# Every run used the configs in configs/ace2.2-era5/training/ (all four stage-1 runs with an
+# earlier inline inference list; see that config's header), the beaker image in
+# configs/ace2.2-era5/deps_only_image.txt, and ai2cm/ace at ACE_GIT_REF, on jupiter with 8 GPUs.
+# They were launched by ai2cm/ace configs/experiments/2026-10-28-ace22-diagnostic-near-surface/
+# run.sh (stages 1-2 at 1e9ed6437, stage 3 at de21101ff), whose job names they carry
+# (ace22-no-gmr-diagnostic-near-surface-stage<N>-rs<seed>); this launcher runs the same configs.
 #
 # stage 1, 40 epochs
-#   seed  beaker experiment           wandb     cluster  GPUs  result dataset
-#   0     01KZYJ4HT4ZMZH296KBNWMPCQF  g94277n6  titan    4     01KZYJ4HTBWED5VG3VFTRYKDRC
-#   1     01M1J6WF8B2FDS0GCFMXVNEA87  eqyklvjp  jupiter  8     01M1J6WF8NQM6AV14WW90MF2T9
-#   2     01M1J6WW2Y7EQB8KWZGACRC2JC  1g0jp15g  jupiter  8     01M1J6WW372RKP423AYD0A9JYQ
-#   3     01M1J6X90YXZ7EFFG01BD8CWEB  qywpn6kq  jupiter  8     01M1J6X918YK0W7ZP9WA422MT9
+#   seed  beaker experiment           wandb     result dataset
+#   0     01M62F2K2B82X370HPXVNNBZ0R  c9ogyvnc  01M67614KW9SK1MJB5FVZD1C5B
+#   1     01M62F2S6XJ2VAKXS29WY092GN  2ma0wa4e  01M62F2S77SZ58S4YJ4REE6RM9
+#   2     01M62F2YYME0ZA7SNYHMN4D1ED  qxpx422z  01M62F2YZ0KPPKB8QCDP527829
+#   3     01M62F34W2NFJ2ZDEQ4CPH9KGH  mlxxvvjv  01M62F34WDE8TWJFWBV1K4E0VC
 #
 # stage 2, 40 epochs; best_inference_ckpt.tar is the epoch given
-#   0     01M06W0WN4WY1HJBWFXJNJEXC7  78crdqjr  titan    4     01M0RFP2DKAGABV89KRPMXX5C3  epoch 8
-#   1     01M1NGC06NPTEZJS1H2KSE8KV2  umx5wd9k  jupiter  8     01M1NGC06ZYNV8CNX62WE7JQ4P  epoch 4
-#   2     01M1NGNEMV2A1ETM4ZGAZ1X2T4  fijdbmy6  jupiter  8     01M1NGNEN34KX4BVKWPTNFA2YG  epoch 20
-#   3     01M1NHPDTMZ0N8K9W7XEWPRYP5  t7cxx6bo  jupiter  8     01M1NHPDTXGJGJBBCP24H42DRK  epoch 24
+#   0     01M67JG3A9FDGHWQ1Z06VQF96P  aim1qvmr  01M67JG3AGYQDE682FMZJ3B3NF  epoch 4
+#   1     01M67JGAGWDMG5NCVE5VYKJ5V1  mgcuvt75  01M67JGAH1RY6AP76N8E49CF50  epoch 4
+#   2     01M67JGHR25HPC10Z7BRDCZHNW  cfdzs2wz  01M67JGHR6BW6ZWAQFXX94F331  epoch 4
+#   3     01M67JGRTCE2SFJDY7XAQFD78S  dy4yfg3m  01M67JGRTM7SBJS5159JE8CA7S  epoch 4
 #
 # stage 3, up to 50 epochs
-#   3     01M1WBBJD18MDTWJD67TJKMM9N  dd0f9jnb  titan    4     01M1WBBJDFYA9VS46V6HH3K1MW  epoch 42
-#   0     01M0TQP4447HF0J96D7FWQ02V6  lmvpfmrp  titan    4     01M0WVHBW4G5H2M2NZ25REP8G4  epoch 32
+#   2     01M6N6HS6VGJPTSA1QJP29F6F9  kdx8qepi  01M6PN2NBP00X8XTV4DE6QERBZ  epoch 12
 #
-# Seed 3's stage 3 is the submitted model (AIMIP version v20260908). Seed 0's stage 3 ran
-# before the seed ensemble existed and was evaluated as v20260825; it is superseded. Seed
-# 0's stage 2 took 35 preempted attempts and its stage 3 was stopped by hand at epoch 35;
-# every other run completed in a single job.
+# Seed 2's stage 3 is the AIMIP model, selected by scripts/run-ace2.2-6h-seed-selection.sh.
+# It was stopped by hand at epoch 35, after 11 inline evaluations (every 2 epochs) without a
+# new best_inference_error; its dataset is that of the experiment's second job, after one
+# preemption. Seed 0's stage 1 took three jobs (the first exited 1, the second was
+# preempted); its dataset is that of the third, which exited 0. Every other run completed in
+# a single job.
 
 JOB_GROUP="ace22-era5-6h-aimip"
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
@@ -67,9 +74,7 @@ REPO_ROOT=$(dirname "$SCRIPT_DIR")
 CONFIG_DIR=$REPO_ROOT/configs/ace2.2-era5/training
 BASE_NAME="train-1deg-6hourly-v2-era5-only-no-residual-no-co2"
 
-# ai2cm/ace commit to run. The runs above were launched at b4a688d85, 379e1ec15, ee05a75f4
-# (seed 0) and af0a56769, e10a9befe, 394e41b5e (seeds 1-3); fme/ is the same tree at all
-# six, so they are interchangeable. This is the last, which AIMIP inference also uses.
+# ai2cm/ace commit to run: every run above, and AIMIP inference, used it.
 ACE_GIT_REF="394e41b5e07d1a3606d51faea1bd09a6fbddb492"
 
 BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')
@@ -95,16 +100,16 @@ STAGE=${STAGE:-}
 SEEDS=${SEEDS:-}
 
 declare -A STAGE1_DONOR=(
-    [0]=01KZYJ4HTBWED5VG3VFTRYKDRC
-    [1]=01M1J6WF8NQM6AV14WW90MF2T9
-    [2]=01M1J6WW372RKP423AYD0A9JYQ
-    [3]=01M1J6X918YK0W7ZP9WA422MT9
+    [0]=01M67614KW9SK1MJB5FVZD1C5B
+    [1]=01M62F2S77SZ58S4YJ4REE6RM9
+    [2]=01M62F2YZ0KPPKB8QCDP527829
+    [3]=01M62F34WDE8TWJFWBV1K4E0VC
 )
 declare -A STAGE2_DONOR=(
-    [0]=01M0RFP2DKAGABV89KRPMXX5C3
-    [1]=01M1NGC06ZYNV8CNX62WE7JQ4P
-    [2]=01M1NGNEN34KX4BVKWPTNFA2YG
-    [3]=01M1NHPDTXGJGJBBCP24H42DRK
+    [0]=01M67JG3AGYQDE682FMZJ3B3NF
+    [1]=01M67JGAH1RY6AP76N8E49CF50
+    [2]=01M67JGHR6BW6ZWAQFXX94F331
+    [3]=01M67JGRTM7SBJS5159JE8CA7S
 )
 
 launch_training () {

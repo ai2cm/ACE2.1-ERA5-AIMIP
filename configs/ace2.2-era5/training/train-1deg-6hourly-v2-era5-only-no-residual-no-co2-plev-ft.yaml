@@ -4,6 +4,10 @@
 # best_inference_ckpt.tar; the launcher (scripts/run-ace2.2-6h-train.sh) mounts that seed's
 # stage-2 result dataset at /weights and sets `seed`. The plev fields already exist in the
 # 6-hourly ERA5 store and its stats, so no separate plev dataset is needed.
+#
+# The stepper matches stage 1's: no global mean removal, and TMP2m, Q2m, UGRD10m and VGRD10m
+# not inputs. The run stopped by hand at epoch 35 of 50, after 11 inline evaluations without
+# a new best_inference_error; best_inference_ckpt.tar is epoch 12.
 seed: 0
 experiment_dir: /results
 save_checkpoint: true
@@ -186,9 +190,8 @@ stepper_training:
   loss:
     type: MSE
   parameter_init:
-    # best_inference_ckpt.tar, not best_ckpt.tar: the inference-error criterion is the one
-    # prior checkpoint selection used, and it peaked at stage-2 epoch 8 (0.026124) and never
-    # improved through epoch 40. EMA-wrapped, since stage 2 ran validate_using_ema: true.
+    # best_inference_ckpt.tar, not best_ckpt.tar: the checkpoint the seed was scored and
+    # selected on. EMA-wrapped, since stage 2 ran validate_using_ema: true.
     weights_path: /weights/training_checkpoints/best_inference_ckpt.tar
     parameters:
       # Freeze the entire donor module. The secondary decoder is a second entry in
@@ -290,10 +293,6 @@ stepper:
       - HGTsfc
       - PRESsfc
       - surface_temperature
-      - TMP2m
-      - Q2m
-      - UGRD10m
-      - VGRD10m
       - air_temperature_0
       - air_temperature_1
       - air_temperature_2
@@ -377,6 +376,3 @@ stepper:
       - tendency_of_total_water_path_due_to_advection
       - TMP850
       - h500
-      global_mean_removal:
-        kind: shared
-        append_as_input: true

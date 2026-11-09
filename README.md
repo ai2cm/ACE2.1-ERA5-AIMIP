@@ -118,19 +118,47 @@ Run `make test-postprocess` to execute the unit test suite for the postprocessin
 ## ACE2.2-ERA5
 
 A second evaluated checkpoint, **ACE2.2-ERA5** (CMIP `source_id` `ACE2-2-ERA5`), runs the same
-inference/postprocessing workflow for a revised recipe: 1° 6-hourly timestep, v2 ERA5-only
-training with revised normalization and module hyperparameters, non-residual prediction, and no
-CO₂ input. Configs are in `configs/ace2.2-era5/`, launchers in `scripts/run-ace2.2-6h-*.sh`.
+inference/postprocessing workflow. Like ACE2.1-ERA5, it is a 1°, 6-hourly model with the same
+input variables (no CO₂), non-residual prediction and no global mean removal. It differs from
+ACE2.1-ERA5 in:
+
+- **Training data:** a newer ERA5 dataset build, trained on 1979–2013 except 1994, which is held
+  out for validation with 2014. ACE2.1 trained on 1979–2008 and validated on 2009–2014.
+- **Stochastic training:** a CRPS and energy-score loss on a two-member ensemble with a noise
+  input, instead of a weighted MSE loss.
+- **Network:** a wider SFNO (embedding dimension 512 instead of 384) with revised module
+  hyperparameters, and latent global-mean clipping.
+- **Near-surface fields:** 2 m temperature and humidity and 10 m winds are outputs of the main
+  network, but not inputs. ACE2.1 predicted them with its secondary pressure-level decoder.
+- **Training stages:** a multi-step fine-tune between the pretraining and the pressure-level
+  decoder (see below).
+
+AIMIP inference runs with latent global-mean clipping off (`scripts/clip_off.py`). The clip acts
+only at inference, so no weights change. Configs are in `configs/ace2.2-era5/`, launchers in
+`scripts/run-ace2.2-6h-*.sh`.
+
+This recipe replaces an earlier ACE2.2-ERA5 recipe with global mean removal and prognostic
+near-surface fields, under the same `source_id`. Its configs and run records are in this
+repository's history at `bbb23aa`. The postprocessed output's `version` directory tells the
+builds apart:
+
+| `version` | Recipe | Training seed (stage-3 epoch) | Stage-3 result dataset | Clip | Raw results | Processed archive | Status |
+|---|---|---|---|---|---|---|---|
+| `v20260825` | earlier | 0 (32) | `01M0WVHBW4G5H2M2NZ25REP8G4` | on | `gs://vcm-ml-intermediate/2026-08-25-ace22-era5-6h-aimip-inference-results` | `gs://vcm-ml-intermediate/2026-08-25-ace22-era5-6h-aimip-processed-data` | superseded |
+| `v20260908` | earlier | 3 (42) | `01M1WBBJDFYA9VS46V6HH3K1MW` | on | `gs://vcm-ml-intermediate/2026-09-07-ace22-era5-6h-rs3-aimip-inference-results` | `gs://vcm-ml-intermediate/2026-09-08-ace22-era5-6h-rs3-aimip-processed-data` | superseded |
+| `v20261107` | current | 2 (12) | `01M6PN2NBP00X8XTV4DE6QERBZ` | off | `gs://vcm-ml-intermediate/2026-11-06-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-inference-results` | `gs://vcm-ml-intermediate/2026-11-07-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-processed-data` | current |
 
 Training replaces stages 1–4 above with three stages, whose configs are kept here under
 `configs/ace2.2-era5/training/` and launched from `scripts/run-ace2.2-6h-train.sh`: pretrain
 (1-step), multi-step fine-tune, and pressure-level decoder fine-tune. As for ACE2.1, the first
 two stages ran for four training seeds and the pressure-level stage for the selected seed only
-(seed 3). Each stage mounts the same seed's previous-stage beaker result dataset, from per-seed
+(seed 2). Each stage mounts the same seed's previous-stage beaker result dataset, from per-seed
 tables in the launcher, which also records every run. The seed was selected with
-`scripts/run-ace2.2-6h-seed-selection.sh`, which applies ACE2.1's two seed-selection evaluations
-(configs `configs/ace2.2-era5/ace-evaluator-seed-selection*.yaml`) to the four stage-2
-checkpoints.
+`scripts/run-ace2.2-6h-seed-selection.sh`, which runs, for each of the four stage-2
+checkpoints, a 1979-2014 rollout and a control / +4 K SST pair (configs
+`configs/ace2.2-era5/ace-evaluator-seed-selection-long36-config.yaml` and
+`configs/ace2.2-era5/ace-seed-selection-inference-*-config.yaml`), each with the clip as trained
+and off, scored on 1979-2014 only; the script records the runs and the choice.
 
 The ACE2.2 launchers pin their own deps-only beaker image in
 `configs/ace2.2-era5/deps_only_image.txt`; the ACE2.1 launchers keep the repo-root
