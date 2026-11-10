@@ -23,8 +23,7 @@ export GRPC_VERBOSITY=ERROR
 # error (0.0193 vs seed 2's 0.0247, clip as trained) but reproduced the least trend of the
 # three seeds kept (47% vs 57%); seed 3 (39%) was screened out on trend. Turning the clip
 # off moves trend and time-mean error little and leaves this choice unchanged, and raises
-# seed 2's +4 K 2 m temperature response from 2.17 to 2.45 K. The analysis is in
-# explore2/brianh/2026-11-05-ace22-1deg-near-surface-choice.
+# seed 2's +4 K 2 m temperature response from 2.17 to 2.45 K.
 #
 # ================================== run record ==================================
 # All 24 runs ran at ai2cm/ace 394e41b5e with the image in configs/ace2.2-era5/deps_only_image.txt,

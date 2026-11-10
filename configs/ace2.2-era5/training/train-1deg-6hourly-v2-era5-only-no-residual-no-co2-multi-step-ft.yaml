@@ -1,5 +1,5 @@
-# Multi-step fine-tune of ACE2.2-ERA5 (1deg/6-hourly): stage 2 of the ACE2S two-stage
-# recipe, initialized from the same seed's stage-1 best_ckpt.tar. The launcher
+# Multi-step fine-tune of ACE2.2-ERA5 (1deg/6-hourly): stage 2 of its three training stages,
+# initialized from the same seed's stage-1 best_ckpt.tar. The launcher
 # (scripts/run-ace2.2-6h-train.sh) mounts that seed's stage-1 result dataset at /weights and
 # sets `seed`; the stepper config and the weights both come from the checkpoint.
 #

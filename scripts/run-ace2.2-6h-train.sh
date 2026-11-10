@@ -10,10 +10,10 @@ export GRPC_VERBOSITY=ERROR
 #   3. pressure-level decoder fine-tuning, initialized from the same seed's stage-2
 #      best_inference_ckpt.tar, with the core frozen
 #
-# The stepper has no global mean removal, and TMP2m, Q2m, UGRD10m and VGRD10m are diagnosed
-# rather than prognostic, as in ACE2.5. This supersedes the earlier 6-hourly ACE2.2-ERA5
-# recipe, which had both (its configs and run record are in this repository's history at
-# bbb23aa), and before it the daily ACE2.2-ERA5 (wandb nobgd4ek), whose 06Z-snapshot output
+# The stepper has no global mean removal, and TMP2m, Q2m, UGRD10m and VGRD10m are outputs of
+# the network but not inputs, rather than prognostic. This supersedes the earlier 6-hourly
+# ACE2.2-ERA5 recipe, which had both (its configs and run record are in this repository's
+# history at bbb23aa), and before it a daily-step ACE2.2-ERA5, whose 06Z-snapshot output
 # could not meet AIMIP's evenly-sampled diurnal-average spec for surface fields. The 6-hourly
 # core is trained entirely from configs in this repo, so the whole pipeline is reproducible
 # from here.

@@ -1,8 +1,7 @@
 # ACE2.2-ERA5 stage 1 (1-step pre-training), 1deg/6-hourly. The stepper has no global mean
-# removal, and TMP2m, Q2m, UGRD10m and VGRD10m are outputs only: the model diagnoses them
-# rather than carrying them as prognostic inputs, as ACE2.5 does. Otherwise this is the
-# earlier ACE2.2-ERA5 recipe, which had shared global mean removal appended as an input and
-# the four near-surface fields prognostic.
+# removal, and TMP2m, Q2m, UGRD10m and VGRD10m are outputs of the network but not inputs,
+# rather than prognostic. Otherwise this is the earlier ACE2.2-ERA5 recipe, which had shared
+# global mean removal appended as an input and the four near-surface fields prognostic.
 #
 # clip_latent_global_means stays on: in training it only records each latent channel's
 # global-mean range, so the weights are the same either way. AIMIP inference turns the clip

@@ -31,9 +31,10 @@ MIN_RUNTIME="${MIN_RUNTIME:-8h}"
 
 # Stage-3 pressure-level FT result dataset. The stage-2 checkpoint cannot serve here:
 # these configs request pressure-level outputs only the fine-tuned decoder produces.
-# Training seed 2 of the four-seed ensemble without global mean removal and with
-# diagnostic near-surface fields (TMP2m, Q2m, UGRD10m, VGRD10m), chosen on 1979-2014
-# rollouts of the stage-2 checkpoints (see explore2/brianh/2026-11-05-ace22-1deg-near-surface-choice).
+# Training seed 2 of the four-seed ensemble without global mean removal and with the
+# near-surface fields (TMP2m, Q2m, UGRD10m, VGRD10m) as network outputs but not inputs,
+# chosen on 1979-2014 rollouts of the stage-2 checkpoints
+# (scripts/run-ace2.2-6h-seed-selection.sh).
 # best_inference_ckpt.tar is the epoch-12 checkpoint, best_inference_error 0.039866; the
 # run was stopped at epoch 35 of 50 after 11 inline evaluations without improvement. The
 # experiment was preempted once; this is the result dataset of its final job. Supersedes
