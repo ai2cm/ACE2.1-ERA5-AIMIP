@@ -11,12 +11,8 @@ export GRPC_VERBOSITY=ERROR
 #      best_inference_ckpt.tar, with the core frozen
 #
 # The stepper has no global mean removal, and TMP2m, Q2m, UGRD10m and VGRD10m are outputs of
-# the network but not inputs, rather than prognostic. This supersedes the earlier 6-hourly
-# ACE2.2-ERA5 recipe, which had both (its configs and run record are in this repository's
-# history at bbb23aa), and before it a daily-step ACE2.2-ERA5, whose 06Z-snapshot output
-# could not meet AIMIP's evenly-sampled diurnal-average spec for surface fields. The 6-hourly
-# core is trained entirely from configs in this repo, so the whole pipeline is reproducible
-# from here.
+# the network but not inputs, rather than prognostic. The core is trained entirely from
+# configs in this repo, so the whole pipeline is reproducible from here.
 #
 # As for ACE2.1-ERA5, stages 1 and 2 ran for four training seeds (0-3), the seed was
 # chosen on 1979-2014 rollouts of the stage-2 checkpoints

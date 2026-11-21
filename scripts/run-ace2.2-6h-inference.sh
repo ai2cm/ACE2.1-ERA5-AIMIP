@@ -37,16 +37,14 @@ MIN_RUNTIME="${MIN_RUNTIME:-8h}"
 # (scripts/run-ace2.2-6h-seed-selection.sh).
 # best_inference_ckpt.tar is the epoch-12 checkpoint, best_inference_error 0.039866; the
 # run was stopped at epoch 35 of 50 after 11 inline evaluations without improvement. The
-# experiment was preempted once; this is the result dataset of its final job. Supersedes
-# seed 3 of the earlier recipe with global mean removal and prognostic near-surface fields
-# (01M1WBBJDFYA9VS46V6HH3K1MW, wandb dd0f9jnb).
+# experiment was preempted once; this is the result dataset of its final job.
 PLEV_FT_RESULTS_DATASET="01M6PN2NBP00X8XTV4DE6QERBZ"  # stage-3 plev FT, seed 2 (wandb kdx8qepi)
 if [ -z "$PLEV_FT_RESULTS_DATASET" ]; then
     echo "ERROR: set PLEV_FT_RESULTS_DATASET to the stage-3 plev FT result dataset ID" >&2
     exit 1
 fi
 
-# ai2cm/ace commit the checkpoint was trained at, the same as for the earlier recipe.
+# ai2cm/ace commit the checkpoint was trained at.
 ACE_GIT_REF="394e41b5e07d1a3606d51faea1bd09a6fbddb492"
 OUTPUT_ROOT="${OUTPUT_ROOT:-/climate-default/2026-11-06-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-inference-results}"
 IC_PATH="/climate-default/2026-08-24-aimip-evaluation/aimip-evaluation-ics/1978-09-30_IC0.nc"

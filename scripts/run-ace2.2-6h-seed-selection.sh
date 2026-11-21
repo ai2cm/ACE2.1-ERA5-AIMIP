@@ -57,10 +57,6 @@ export GRPC_VERBOSITY=ERROR
 #   3     control  off   01M6F9YJRB8878801C901GBNNC  1sblzcwc
 #   3     p4k      off   01M6F9YPSJB3JEAMF4PBW8R340  dchupuz9
 #
-# The earlier ACE2.2-ERA5 recipe (global mean removal, prognostic near-surface fields) was
-# selected with ACE2.1's two evaluations instead; its configs and record are in this
-# repository's history at bbb23aa.
-#
 # Usage:
 #   JOB_PREFIX=<new prefix> bash scripts/run-ace2.2-6h-seed-selection.sh
 #   JOB_PREFIX=<new prefix> SEEDS="2" bash scripts/run-ace2.2-6h-seed-selection.sh

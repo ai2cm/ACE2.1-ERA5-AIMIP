@@ -1,9 +1,9 @@
-# ACE2.1-ERA5 (AIMIP) training and evaluation
+# ACE2.1-ERA5 and ACE2.2-ERA5 (AIMIP) training and evaluation
 
-This directory contains scripts and configurations for training and running an ACE2 model on ERA5
-data for the AIMIP evaluation protocol. This configuration is referred to as **ACE2.1-ERA5**. The
-model predicts pressure-level diagnostic variables over 1978–2024 with multiple initial conditions
-and SST perturbation scenarios.
+This directory contains scripts and configurations for training and running ACE2 models on ERA5
+data for the AIMIP evaluation protocol. Two configurations were submitted: **ACE2.1-ERA5**,
+described first, and **ACE2.2-ERA5**, described [below](#ace22-era5). Both predict pressure-level
+diagnostic variables over 1978–2024 with multiple ensemble members and SST perturbation scenarios.
 
 ## Setup
 
@@ -137,16 +137,11 @@ AIMIP inference runs with latent global-mean clipping off (`scripts/clip_off.py`
 only at inference, so no weights change. Configs are in `configs/ace2.2-era5/`, launchers in
 `scripts/run-ace2.2-6h-*.sh`.
 
-This recipe replaces an earlier ACE2.2-ERA5 recipe with global mean removal and prognostic
-near-surface fields, under the same `source_id`. Its configs and run records are in this
-repository's history at `bbb23aa`. The postprocessed output's `version` directory tells the
-builds apart:
+The submitted outputs have `version` `v20261107`. They come from training seed 2 (stage-3 epoch 12,
+result dataset `01M6PN2NBP00X8XTV4DE6QERBZ`), run with the clip off:
 
-| `version` | Recipe | Training seed (stage-3 epoch) | Stage-3 result dataset | Clip | Raw results | Processed archive | Status |
-|---|---|---|---|---|---|---|---|
-| `v20260825` | earlier | 0 (32) | `01M0WVHBW4G5H2M2NZ25REP8G4` | on | `gs://vcm-ml-intermediate/2026-08-25-ace22-era5-6h-aimip-inference-results` | `gs://vcm-ml-intermediate/2026-08-25-ace22-era5-6h-aimip-processed-data` | superseded |
-| `v20260908` | earlier | 3 (42) | `01M1WBBJDFYA9VS46V6HH3K1MW` | on | `gs://vcm-ml-intermediate/2026-09-07-ace22-era5-6h-rs3-aimip-inference-results` | `gs://vcm-ml-intermediate/2026-09-08-ace22-era5-6h-rs3-aimip-processed-data` | superseded |
-| `v20261107` | current | 2 (12) | `01M6PN2NBP00X8XTV4DE6QERBZ` | off | `gs://vcm-ml-intermediate/2026-11-06-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-inference-results` | `gs://vcm-ml-intermediate/2026-11-07-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-processed-data` | current |
+- Raw results: `gs://vcm-ml-intermediate/2026-11-06-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-inference-results`
+- Processed archive: `gs://vcm-ml-intermediate/2026-11-07-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-processed-data`
 
 Training replaces stages 1–4 above with three stages, whose configs are kept here under
 `configs/ace2.2-era5/training/` and launched from `scripts/run-ace2.2-6h-train.sh`: pretrain

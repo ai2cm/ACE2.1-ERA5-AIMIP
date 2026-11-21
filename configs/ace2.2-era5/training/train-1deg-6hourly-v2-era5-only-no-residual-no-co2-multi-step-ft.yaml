@@ -3,9 +3,8 @@
 # (scripts/run-ace2.2-6h-train.sh) mounts that seed's stage-1 result dataset at /weights and
 # sets `seed`; the stepper config and the weights both come from the checkpoint.
 #
-# All four seeds ran this config as it stands. It is unchanged from the earlier ACE2.2-ERA5
-# recipe; the stepper config comes from the stage-1 checkpoint, so it carries that stage's
-# inputs and lack of global mean removal.
+# All four seeds ran this config as it stands. The stepper config comes from the stage-1
+# checkpoint, so it carries that stage's inputs and lack of global mean removal.
 seed: 0
 experiment_dir: /results
 save_checkpoint: true
