@@ -77,8 +77,8 @@ OUTPUT_ROOT="${OUTPUT_ROOT:-/climate-default/2026-10-28-ace22-diagnostic-near-su
 
 BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')
 # wandb runs on a service-account key, so this is the only thing attributing them
-# to a human, and it differs from the beaker username.
-WANDB_USERNAME="bhenn1983"
+# to a human, and it can differ from the beaker username.
+WANDB_USERNAME="${WANDB_USERNAME:?set WANDB_USERNAME to your wandb username}"
 
 # Each seed's stage-2 result dataset, as in STAGE2_DONOR in scripts/run-ace2.2-6h-train.sh.
 declare -A STAGE2_CHECKPOINT=(

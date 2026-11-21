@@ -158,7 +158,8 @@ and off, scored on 1979-2014 only; the script records the runs and the choice.
 The ACE2.2 launchers pin their own deps-only beaker image in
 `configs/ace2.2-era5/deps_only_image.txt`; the ACE2.1 launchers keep the repo-root
 `latest_deps_only_image.txt`. Both models stay reproducible against the image they were
-actually run under.
+actually run under. They also read the wandb username from the `WANDB_USERNAME` environment
+variable and stop if it is unset.
 
 ACE2.2 is stochastic, so the five AIMIP realizations share one initial condition and differ only
 by `seed`; ACE2.1 needed lagged ICs because it was deterministic.
@@ -207,5 +208,3 @@ level; archive the finished tree in one `gcloud storage rsync -r` pass instead.
 
 Confirm 48 files per member before evaluating -- `postprocess.py` exiting 0 does not mean the
 output is complete.
-
-`--daily-time-shift-hours` keeps its default of 9 (the 0/6/12/18Z daily mean is stamped 9Z).

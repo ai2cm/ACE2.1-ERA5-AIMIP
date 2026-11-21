@@ -7,7 +7,6 @@ and uploads the results to GCS.
 import argparse
 import dataclasses
 import datetime
-import functools
 import logging
 import os
 import re
@@ -284,11 +283,10 @@ def monthly_data_time_coord(ds: xr.Dataset) -> xr.Dataset:
     return ds.assign_coords({"time": month_starts})
 
 
-def daily_data_time_coord(ds: xr.Dataset, shift_hours: int = 9) -> xr.Dataset:
-    """Shift the ACE data writer's daily time coordinate to 0Z. For a 6-hourly
-    model, averaging over 0, 6, 12, 18Z stamps daily data at 9Z (shift 9 hours);
-    for a daily-06Z model each day is a single 06Z sample (shift 6 hours)."""
-    day_starts = ds["time"].values - datetime.timedelta(hours=shift_hours)
+def daily_data_time_coord(ds: xr.Dataset) -> xr.Dataset:
+    """ACE data writer averaging over 0, 6, 12, 18Z outputs results in a daily time
+    coordinate at 9Z. Shift these to 0Z."""
+    day_starts = ds["time"].values - datetime.timedelta(hours=9)
     return ds.assign_coords({"time": day_starts})
 
 
@@ -513,15 +511,6 @@ def _get_parser() -> argparse.ArgumentParser:
             "when --model-source-name is ACE2-ERA5; otherwise this must be provided."
         ),
     )
-    parser.add_argument(
-        "--daily-time-shift-hours",
-        type=int,
-        default=9,
-        help=(
-            "Hours to shift the data writer's daily time stamps back to 0Z: 9 for a "
-            "6-hourly model (0/6/12/18Z mean stamped 9Z), 6 for a daily-06Z model."
-        ),
-    )
     return parser
 
 
@@ -579,15 +568,12 @@ def main(args: argparse.Namespace) -> None:
             else:
                 raise ValueError(f"Invalid grid_label: {fc.grid_label}")
 
-            standardize_time_coord: Callable[[xr.Dataset], xr.Dataset]
             if fc.table_id == "Amon":
                 frequency = "mon"
                 standardize_time_coord = monthly_data_time_coord
             elif fc.table_id == "day":
                 frequency = "day"
-                standardize_time_coord = functools.partial(
-                    daily_data_time_coord, shift_hours=args.daily_time_shift_hours
-                )
+                standardize_time_coord = daily_data_time_coord
             else:
                 raise ValueError(f"Invalid table_id: {fc.table_id}")
 

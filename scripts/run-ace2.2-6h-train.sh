@@ -75,8 +75,8 @@ ACE_GIT_REF="394e41b5e07d1a3606d51faea1bd09a6fbddb492"
 
 BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')
 # wandb runs on a service-account key, so this is the only thing attributing them
-# to a human, and it differs from the beaker username.
-WANDB_USERNAME="bhenn1983"
+# to a human, and it can differ from the beaker username.
+WANDB_USERNAME="${WANDB_USERNAME:?set WANDB_USERNAME to your wandb username}"
 
 # Cluster and GPU count move together: per-GPU memory sets how many ranks the batch
 # needs. batch_size is global and fme splits it across data-parallel ranks, so the

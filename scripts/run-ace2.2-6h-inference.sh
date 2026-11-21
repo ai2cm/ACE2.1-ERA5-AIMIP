@@ -49,7 +49,8 @@ ACE_GIT_REF="394e41b5e07d1a3606d51faea1bd09a6fbddb492"
 OUTPUT_ROOT="${OUTPUT_ROOT:-/climate-default/2026-11-06-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-inference-results}"
 IC_PATH="/climate-default/2026-08-24-aimip-evaluation/aimip-evaluation-ics/1978-09-30_IC0.nc"
 BEAKER_USERNAME=$(beaker account whoami --format=json | jq -r '.[0].name')
-WANDB_IDENTITY="bhenn1983"  # differs from BEAKER_USERNAME; do not derive one from the other
+# Can differ from BEAKER_USERNAME; do not derive one from the other.
+WANDB_IDENTITY="${WANDB_USERNAME:?set WANDB_USERNAME to your wandb username}"
 
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(dirname "$SCRIPT_DIR")
