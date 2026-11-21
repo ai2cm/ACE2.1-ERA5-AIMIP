@@ -1,0 +1,104 @@
+# Seed selection for ACE2.2-ERA5: a 1979-2014 rollout of each training seed's stage-2
+# checkpoint (best_inference_ckpt.tar), eight initial conditions a day apart from
+# 1979-01-01, scored on time-mean error and the share of the ERA5 2 m temperature trend
+# reproduced. Launched by scripts/run-ace2.2-6h-seed-selection.sh, with the latent clip as
+# trained and off. Ends 2014-12-31, before the AIMIP holdout.
+#
+# Settings identical to configs/experiments/2026-10-28-ace22-diagnostic-near-surface/
+# long36-evaluator-config.yaml in ai2cm/ace at 1e9ed6437, which ran the recorded selection.
+# The ERA5 training store serves as initial condition, forcing and target, as the inline
+# rollouts do.
+#
+# No output files are written; only the aggregator summary metrics are wanted.
+#
+# The checkpoint is mounted at /ckpt.tar by the launcher, once per model.
+checkpoint_path: /ckpt.tar
+experiment_dir: /results
+# NOT seeded, deliberately. `InferenceEvaluatorConfig` has a `seed` field that threads the
+# random state through the rollout; leaving it unset means these noise-conditioned models
+# draw different noise each run, so two runs of the same weights differ -- 2.7% median over
+# the 30 fields P2's stage-2 and stage-3 runs share. Setting it now would make this config
+# stop reproducing the numbers already reported, and a single seeded draw is no better than
+# a single unseeded one for a one-off comparison. Set it for any future set of runs that is
+# generated together, and re-run the whole set if so.
+n_forward_steps: 52566
+forward_steps_in_memory: 40
+logging:
+  project: ace
+loader:
+  start_indices:
+    times:
+    - '1979-01-01T06:00:00'
+    - '1979-01-02T06:00:00'
+    - '1979-01-03T06:00:00'
+    - '1979-01-04T06:00:00'
+    - '1979-01-05T06:00:00'
+    - '1979-01-06T06:00:00'
+    - '1979-01-07T06:00:00'
+    - '1979-01-08T06:00:00'
+  dataset:
+    data_path: /climate-default/
+    file_pattern: 2026-03-19-era5-1deg-8layer-1940-2025.zarr
+    engine: zarr
+  num_data_workers: 4
+data_writer:
+  save_prediction_files: false
+  save_monthly_files: false
+aggregator:
+  step_means: []
+  ensembles: []
+  mean_denorm:
+    enabled: false
+    target: denorm
+  mean_norm:
+    enabled: false
+    target: norm
+  zonal_mean:
+    enabled: false
+  time_mean_denorm:
+    target: denorm
+    variables: &id001
+    - PRATEsfc
+    - TMP2m
+    - Q2m
+    - UGRD10m
+    - VGRD10m
+    - h500
+    - TMP850
+    - PRESsfc
+    - surface_temperature
+    - ULWRFsfc
+    - DLWRFsfc
+    - USWRFsfc
+    - DSWRFsfc
+    - ULWRFtoa
+    - USWRFtoa
+    - LHTFLsfc
+    - SHTFLsfc
+    - tendency_of_total_water_path_due_to_advection
+    - air_temperature_0
+    - air_temperature_1
+    - air_temperature_3
+    - air_temperature_7
+    - specific_total_water_0
+    - specific_total_water_1
+    - specific_total_water_3
+    - specific_total_water_7
+    - eastward_wind_0
+    - eastward_wind_1
+    - eastward_wind_3
+    - eastward_wind_7
+    - northward_wind_0
+    - northward_wind_1
+    - northward_wind_3
+    - northward_wind_7
+    - total_water_path
+  time_mean_norm:
+    target: norm
+    variables: *id001
+  annual:
+    variables: *id001
+  power_spectrum:
+    variables: *id001
+  histogram:
+    enabled: true

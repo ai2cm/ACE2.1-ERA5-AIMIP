@@ -1,9 +1,9 @@
-# ACE2.1-ERA5 (AIMIP) training and evaluation
+# ACE2.1-ERA5 and ACE2.2-ERA5 (AIMIP) training and evaluation
 
-This directory contains scripts and configurations for training and running an ACE2 model on ERA5
-data for the AIMIP evaluation protocol. This configuration is referred to as **ACE2.1-ERA5**. The
-model predicts pressure-level diagnostic variables over 1978–2024 with multiple initial conditions
-and SST perturbation scenarios.
+This directory contains scripts and configurations for training and running ACE2 models on ERA5
+data for the AIMIP evaluation protocol. Two configurations were submitted: **ACE2.1-ERA5**,
+described first, and **ACE2.2-ERA5**, described [below](#ace22-era5). Both predict pressure-level
+diagnostic variables over 1978–2024 with multiple ensemble members and SST perturbation scenarios.
 
 ## Setup
 
@@ -105,7 +105,7 @@ Key options:
 | `--processed-results-dir` | GCS destination for processed results |
 | `--output-version` | Version string in output paths (default: `v20251130`) |
 | `--simulation NAME` | Process a single simulation instead of all 15 |
-| `--skip-gcs-upload` | Write locally only, skip GCS upload |
+| `--skip-gcs-upload` | Write locally only; `--local-dir` is the output and is not deleted |
 
 Output files follow the CMIP6 Data Reference Syntax:
 
@@ -114,3 +114,97 @@ Output files follow the CMIP6 Data Reference Syntax:
 ```
 
 Run `make test-postprocess` to execute the unit test suite for the postprocessing helpers.
+
+## ACE2.2-ERA5
+
+A second evaluated checkpoint, **ACE2.2-ERA5** (CMIP `source_id` `ACE2-2-ERA5`), runs the same
+inference/postprocessing workflow. Like ACE2.1-ERA5, it is a 1°, 6-hourly model with the same
+input variables (no CO₂), non-residual prediction and no global mean removal. It differs from
+ACE2.1-ERA5 in:
+
+- **Training data:** a newer ERA5 dataset build, trained on 1979–2013 except 1994, which is held
+  out for validation with 2014. ACE2.1 trained on 1979–2008 and validated on 2009–2014.
+- **Stochastic training:** a CRPS and energy-score loss on a two-member ensemble with a noise
+  input, instead of a weighted MSE loss.
+- **Network:** a wider SFNO (embedding dimension 512 instead of 384) with revised module
+  hyperparameters, and latent global-mean clipping.
+- **Near-surface fields:** 2 m temperature and humidity and 10 m winds are outputs of the main
+  network, but not inputs. ACE2.1 predicted them with its secondary pressure-level decoder.
+- **Training stages:** a multi-step fine-tune between the pretraining and the pressure-level
+  decoder (see below).
+
+AIMIP inference runs with latent global-mean clipping off (`scripts/clip_off.py`). The clip acts
+only at inference, so no weights change. Configs are in `configs/ace2.2-era5/`, launchers in
+`scripts/run-ace2.2-6h-*.sh`.
+
+The submitted outputs have `version` `v20261107`. They come from training seed 2 (stage-3 epoch 12,
+result dataset `01M6PN2NBP00X8XTV4DE6QERBZ`), run with the clip off:
+
+- Raw results: `gs://vcm-ml-intermediate/2026-11-06-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-inference-results`
+- Processed archive: `gs://vcm-ml-intermediate/2026-11-07-ace22-no-gmr-diagnostic-near-surface-rs2-aimip-processed-data`
+
+Training replaces stages 1–4 above with three stages, whose configs are kept here under
+`configs/ace2.2-era5/training/` and launched from `scripts/run-ace2.2-6h-train.sh`: pretrain
+(1-step), multi-step fine-tune, and pressure-level decoder fine-tune. As for ACE2.1, the first
+two stages ran for four training seeds and the pressure-level stage for the selected seed only
+(seed 2). Each stage mounts the same seed's previous-stage beaker result dataset, from per-seed
+tables in the launcher, which also records every run. The seed was selected with
+`scripts/run-ace2.2-6h-seed-selection.sh`, which runs, for each of the four stage-2
+checkpoints, a 1979-2014 rollout and a control / +4 K SST pair (configs
+`configs/ace2.2-era5/ace-evaluator-seed-selection-long36-config.yaml` and
+`configs/ace2.2-era5/ace-seed-selection-inference-*-config.yaml`), each with the clip as trained
+and off, scored on 1979-2014 only; the script records the runs and the choice.
+
+The ACE2.2 launchers pin their own deps-only beaker image in
+`configs/ace2.2-era5/deps_only_image.txt`; the ACE2.1 launchers keep the repo-root
+`latest_deps_only_image.txt`. Both models stay reproducible against the image they were
+actually run under. They also read the wandb username from the `WANDB_USERNAME` environment
+variable and stop if it is unset.
+
+ACE2.2 is stochastic, so the five AIMIP realizations share one initial condition and differ only
+by `seed`; ACE2.1 needed lagged ICs because it was deterministic.
+
+### Run inference
+
+```bash
+bash scripts/run-ace2.2-6h-inference-smoke.sh
+bash scripts/run-ace2.2-6h-inference.sh
+```
+
+15 jobs (5 realizations × baseline/+2K/+4K), 67576 6-hourly steps (1978-09-30T18Z → 2024-12-31T18Z).
+Run the smoke job first and confirm the raw output carries every `files.yaml` entry and all 7
+pressure levels. Before postprocessing the full sweep, check the five realizations actually differ
+— identical global-mean `tas` means the seeding did not take, and nothing downstream flags a
+zero-spread ensemble.
+
+### Postprocess
+
+**Copy the raw results to local disk first.** `postprocess.py` reads each file through fsspec,
+which streams from GCS single-threaded at ~5 MB/s -- around 150 s per file against ~3 s from
+local disk, and there are 56 raw files per member. `--raw-results-dir` takes a local path.
+
+```bash
+bash scripts/run-ace2.2-6h-mirror-raw-results.sh   # weka -> GCS (postprocess.py runs locally)
+gcloud storage cp -r "gs://vcm-ml-intermediate/<results-name>/<job-name>"-r{1..5} /scratch/raw/
+```
+
+Then run one process per simulation, five in parallel, writing straight into the evaluation
+repo's `local_data` so no upload round trip is needed:
+
+```bash
+make postprocess ARGS="--raw-results-dir /scratch/raw --simulation <job-name>-r1 \
+    --simulations-file simulations-ace2.2-6h.yaml \
+    --model-source-name ACE2-2-ERA5 \
+    --source-description 'ACE2-2-ERA5: ACE (Ai2 climate emulator) version 2.2 trained on ERA5' \
+    --output-version vYYYYMMDD --skip-gcs-upload \
+    --local-dir /path/to/AIMIP/local_data/Ai2/ACE2-2-ERA5/"
+```
+
+Parallel runs are safe **only** with `--skip-gcs-upload`, which is also what leaves the output
+in place: otherwise each process deletes the shared `--local-dir` once its own upload finishes.
+It further avoids the upload's nesting behaviour, since `gsutil cp -r` writes the first
+simulation's tree at the destination root and every later one under an extra `aimip-ace/`
+level; archive the finished tree in one `gcloud storage rsync -r` pass instead.
+
+Confirm 48 files per member before evaluating -- `postprocess.py` exiting 0 does not mean the
+output is complete.
