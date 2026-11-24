@@ -1,0 +1,55 @@
+{
+  "upload_type": "software",
+  "license": "Apache-2.0",
+  "creators": [
+    {
+      "name": "Henn, Brian",
+      "affiliation": "Allen Institute for Artificial Intelligence",
+      "orcid": "0000-0001-6384-2051"
+    },
+    {
+      "name": "Watt-Meyer, Oliver",
+      "affiliation": "Allen Institute for Artificial Intelligence",
+      "orcid": "0000-0001-8419-1526"
+    },
+    {
+      "name": "Arcomano, Troy",
+      "affiliation": "Allen Institute for Artificial Intelligence",
+      "orcid": "0000-0002-9359-6020"
+    },
+    {
+      "name": "McGibbon, Jeremy",
+      "affiliation": "Allen Institute for Artificial Intelligence",
+      "orcid": "0000-0003-4955-9772"
+    },
+    {
+      "name": "Clark, Spencer",
+      "affiliation": "Allen Institute for Artificial Intelligence / NOAA Geophysical Fluid Dynamics Laboratory",
+      "orcid": "0000-0001-5595-7895"
+    },
+    {
+      "name": "Wu, Elynn",
+      "affiliation": "Allen Institute for Artificial Intelligence",
+      "orcid": "0000-0001-6039-5997"
+    },
+    {
+      "name": "Perkins, Walter",
+      "affiliation": "Allen Institute for Artificial Intelligence",
+      "orcid": "0000-0001-7742-7609"
+    },
+    {
+      "name": "Kwa, Anna",
+      "affiliation": "Allen Institute for Artificial Intelligence"
+    },
+    {
+      "name": "Duncan, James",
+      "affiliation": "Allen Institute for Artificial Intelligence",
+      "orcid": "0000-0003-3297-681X"
+    },
+    {
+      "name": "Bretherton, Christopher",
+      "affiliation": "Allen Institute for Artificial Intelligence",
+      "orcid": "0000-0002-6712-8856"
+    }
+  ]
+}
