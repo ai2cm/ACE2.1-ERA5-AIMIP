@@ -1,20 +1,36 @@
-# ACE2.1-ERA5 AIMIP Inference Outputs
+# ACE2.1-ERA5 and ACE2.2-ERA5 AIMIP Inference Outputs
 
-Daily and monthly mean atmospheric output from 15 multidecadal AMIP-style ensemble simulations using the ACE2.1-ERA5 machine learning atmospheric model, contributed to [AIMIP Phase 1](https://github.com/ai2cm/AIMIP).
+Daily and monthly mean atmospheric output from multidecadal AMIP-style ensemble simulations using the ACE2.1-ERA5 and ACE2.2-ERA5 machine learning atmospheric models, 15 simulations each, contributed to [AIMIP Phase 1](https://github.com/ai2cm/AIMIP).
 
 ## Overview
 
-This dataset contains output from 15 parallel ~46-year atmospheric simulations produced by the ACE2.1-ERA5 model as a contribution to the AI Model Intercomparison Project (AIMIP) Phase 1. AIMIP systematically evaluates AI weather/climate models trained on ERA5 reanalysis by running standardized AMIP-style simulations and comparing their climate statistics against reference observations and conventional models.
+This dataset contains output from ~46-year atmospheric simulations produced by two versions of the Ai2 Climate Emulator, ACE2.1-ERA5 and ACE2.2-ERA5, as contributions to the AI Model Intercomparison Project (AIMIP) Phase 1. AIMIP systematically evaluates AI weather/climate models trained on ERA5 reanalysis by running standardized AMIP-style simulations and comparing their climate statistics against reference observations and conventional models.
 
-The 15 simulations span 5 ensemble members (different initial atmospheric conditions) and 3 sea surface temperature (SST) forcing scenarios — historical baseline, +2 K, and +4 K uniform global SST perturbations — covering October 1978 through December 2024. Outputs are CMIP6-compliant NetCDF files at daily and monthly mean temporal resolution on a 1° × 1° global grid.
+For each model, 15 simulations span 5 ensemble members and 3 sea surface temperature (SST) forcing scenarios — historical baseline, +2 K, and +4 K uniform global SST perturbations — covering October 1978 through December 2024. Outputs are CMIP6-compliant NetCDF files at daily and monthly mean temporal resolution on a 1° × 1° global grid.
 
-## Model
+## Models
+
+### ACE2.1-ERA5
 
 ACE2.1-ERA5 is a version of the [Ai2 Climate Emulator (ACE)](https://github.com/ai2cm/ace) trained on ERA5 reanalysis data. The base model uses a Noise-Conditioned Spherical Fourier Neural Operator (NoiseConditionedSFNO) architecture on a 1° global horizontal grid with 8 native vertical levels. A secondary MLP decoder, added via fine-tuning with the base model frozen, produces the pressure-level diagnostic variables included in this dataset. The base model was trained on ERA5 data from 1979–2008 (training) and 2009–2014 (validation); four random seeds were trained and evaluated, and the best-performing seed was selected for inference.
 
+### ACE2.2-ERA5
+
+ACE2.2-ERA5 (CMIP `source_id` `ACE2-2-ERA5`) is a stochastic model with the same 1° grid, 8 native vertical levels, 6-hourly time step and input variables as ACE2.1-ERA5. It differs from ACE2.1-ERA5 as follows:
+
+- It is trained with a CRPS and energy-score loss and a noise input, instead of a weighted mean squared error loss.
+- Its network is wider (embedding dimension 512 instead of 384), with revised module hyperparameters.
+- The 2 m temperature and humidity and the 10 m winds are outputs of the main network, but not inputs. ACE2.1-ERA5 predicts them with its secondary decoder.
+- It was trained on ERA5 data from 1979–2013 except 1994, with 1994 and 2014 held out for validation.
+- Training has three stages: single-step pretraining, multi-step fine-tuning, and fine-tuning of the secondary pressure-level decoder with the main network frozen.
+
+Four random seeds were trained, and one was selected for inference from simulations over 1979–2014.
+
 **Resources:**
-- Code: https://github.com/ai2cm/ace
+- Model code: https://github.com/ai2cm/ace
+- Training, inference and postprocessing workflow: https://github.com/ai2cm/ACE2.1-ERA5-AIMIP, archived for ACE2.1-ERA5 at https://doi.org/10.5281/zenodo.19831256 and for ACE2.2-ERA5 at https://doi.org/10.5281/zenodo.24515079
 - Paper: Watt-Meyer et al. (2025). "ACE2: Accurately learning subseasonal to decadal atmospheric variability and forced responses." *npj Climate and Atmospheric Science*. https://doi.org/10.1038/s41612-025-01090-0
+- Papers related to ACE2.2-ERA5: Perkins et al. (2026). "HiRO-ACE: Fast and skillful AI emulation and downscaling trained on a 3 km global storm-resolving model." https://arxiv.org/abs/2512.18224; McGibbon et al. (2026). "Stochastic climate emulation at reduced cost with ACE2.5-ERA5." https://arxiv.org/abs/2611.28315
 - Model checkpoints: [allenai/ACE HuggingFace collection](https://huggingface.co/collections/allenai/ace-67327d822f0f0d8e0e5e6ca4)
 
 ## Experiment Design
@@ -33,11 +49,11 @@ AIMIP Phase 1 is an intercomparison project comparing AI weather/climate models 
 | Model timestep | 6-hourly (internal; outputs are daily and monthly averages) |
 | Ensemble members | 5 (r1i1p1f1 – r5i1p1f1) |
 | SST scenarios | 3 (baseline, +2K, +4K) |
-| Total simulations | 15 |
+| Total simulations | 15 per model |
 
 ### Forcing Data
 
-The model is forced with prescribed monthly sea surface temperature (SST) and sea-ice concentration (SIC) derived from ERA5 reanalysis (1978–2024), regridded to the ACE2.1-ERA5 native 1° global grid. Three scenarios are provided:
+Both models are forced with prescribed monthly sea surface temperature (SST) and sea-ice concentration (SIC) derived from ERA5 reanalysis (1978–2024), regridded to the models' native 1° global grid. Three scenarios are provided:
 
 | Experiment ID | Description |
 |---|---|
@@ -47,7 +63,7 @@ The model is forced with prescribed monthly sea surface temperature (SST) and se
 
 ### Ensemble Members
 
-Five simulations are run per scenario, each initialized from a different atmospheric state on or around October 1, 1978. Ensemble members are labeled `r1i1p1f1` through `r5i1p1f1`.
+Five simulations are run per scenario, labeled `r1i1p1f1` through `r5i1p1f1`. ACE2.1-ERA5 is deterministic, so its members are initialized from different atmospheric states on or around October 1, 1978. ACE2.2-ERA5 is stochastic, so its members share one initial state and differ by random seed.
 
 ## Variables
 
@@ -59,7 +75,12 @@ Two frequency tables are available:
 
 ### 3D Atmospheric Fields at Standard Pressure Levels (grid label: `gr`)
 
-These variables are provided at 13 standard pressure levels: 50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, and 1000 hPa, stacked along a single `plev` dimension. They are produced by a secondary MLP decoder added during fine-tuning.
+These variables are provided at standard pressure levels, stacked along a single `plev` dimension:
+
+- ACE2.1-ERA5: 13 levels (50, 100, 150, 200, 250, 300, 400, 500, 600, 700, 850, 925, and 1000 hPa)
+- ACE2.2-ERA5: the 7 AIMIP levels (50, 100, 250, 500, 700, 850, and 1000 hPa)
+
+They are produced by a secondary MLP decoder added during fine-tuning. In ACE2.2-ERA5, 850 hPa temperature and 500 hPa geopotential height come from the main network instead.
 
 | Variable | Long name | Units | Frequencies |
 |---|---|---|---|
@@ -71,7 +92,7 @@ These variables are provided at 13 standard pressure levels: 50, 100, 150, 200, 
 
 ### 3D Atmospheric Fields at Native Model Levels (grid label: `gn`)
 
-These variables are also provided on the ACE2.1-ERA5 native 8-level model coordinate. The 8 levels are ordered from the surface upward and represent the model's internal prognostic state.
+These variables are also provided on the models' native 8-level coordinate. The 8 layers are ordered from the top of the atmosphere downward (`model_layer` 0 is the uppermost) and represent the models' internal prognostic state.
 
 | Variable | Long name | Units | Frequencies |
 |---|---|---|---|
@@ -102,7 +123,7 @@ NetCDF4, CF-convention compliant, with CMIP6-standard variable names, units, and
 
 ### File Naming Convention
 
-Files follow the CMIP6 Data Reference Syntax (DRS), organized in a nested directory hierarchy:
+Files follow the CMIP6 Data Reference Syntax (DRS). Each model has its own folder, with a nested directory hierarchy inside it:
 
 ```
 {experiment_id}/{variant_label}/{table_id}/{varname}/{grid_label}/{version}/{filename}.nc
@@ -111,8 +132,13 @@ Files follow the CMIP6 Data Reference Syntax (DRS), organized in a nested direct
 where `{filename}` is:
 
 ```
-{varname}_{table_id}_ACE2-ERA5_{experiment_id}_{variant_label}_{grid_label}_{start}-{end}.nc
+{varname}_{table_id}_{source_id}_{experiment_id}_{variant_label}_{grid_label}_{start}-{end}.nc
 ```
+
+| Model | Folder | `source_id` in file names | `version` |
+|---|---|---|---|
+| ACE2.1-ERA5 | `ACE2-1-ERA5/` | `ACE2-ERA5` | `v20251130` |
+| ACE2.2-ERA5 | `ACE2-2-ERA5/` | `ACE2-2-ERA5` | `v20261107` |
 
 | Field | Values |
 |---|---|
@@ -120,28 +146,27 @@ where `{filename}` is:
 | `experiment_id` | `aimip`, `aimip-p2k`, or `aimip-p4k` |
 | `variant_label` | `r1i1p1f1` through `r5i1p1f1` |
 | `grid_label` | `gr` (standard pressure levels) or `gn` (native model grid) |
-| `version` | e.g., `v20251130` |
 | `start`/`end` | `YYYYMM` format |
 
-**Examples:**
+**Examples**, relative to each model's folder:
 ```
-# Monthly temperature at standard pressure levels (full period)
+# ACE2.1-ERA5: monthly temperature at standard pressure levels (full period)
 aimip/r1i1p1f1/Amon/ta/gr/v20251130/ta_Amon_ACE2-ERA5_aimip_r1i1p1f1_gr_197810-202412.nc
 
-# Monthly near-surface temperature (full period)
-aimip/r1i1p1f1/Amon/tas/gn/v20251130/tas_Amon_ACE2-ERA5_aimip_r1i1p1f1_gn_197810-202412.nc
+# ACE2.2-ERA5: monthly near-surface temperature (full period)
+aimip/r1i1p1f1/Amon/tas/gn/v20261107/tas_Amon_ACE2-2-ERA5_aimip_r1i1p1f1_gn_197810-202412.nc
 
-# Daily temperature at pressure levels, +2K scenario (spinup sub-period)
+# ACE2.1-ERA5: daily temperature at pressure levels, +2K scenario (spinup sub-period)
 aimip-p2k/r3i1p1f1/day/ta/gr/v20251130/ta_day_ACE2-ERA5_aimip-p2k_r3i1p1f1_gr_19781001-19791231.nc
 ```
 
 ### Dataset Size
 
-Approximately 500 GB total (daily + monthly, 5 ensemble members × 3 SST scenarios).
+Approximately 560 GB for ACE2.1-ERA5 and 360 GB for ACE2.2-ERA5 (daily + monthly, 5 ensemble members × 3 SST scenarios each).
 
 ## How to Use
 
-The files can be opened with any NetCDF-compatible tool. A minimal Python example using [xarray](https://xarray.dev/):
+The files can be opened with any NetCDF-compatible tool. A minimal Python example using [xarray](https://xarray.dev/), run from the `ACE2-1-ERA5/` folder (for ACE2.2-ERA5, use its folder, `source_id` and `version` from the table above):
 
 ```python
 import xarray as xr
@@ -155,7 +180,7 @@ ds = xr.open_dataset(
 tas = ds["tas"]  # shape: (time, lat, lon)
 
 # Monthly temperature at standard pressure levels (full period)
-# All 13 pressure levels are stacked along the plev dimension
+# All pressure levels (13 for ACE2.1-ERA5, 7 for ACE2.2-ERA5) are stacked along the plev dimension
 ds3d = xr.open_dataset(
     "aimip/r1i1p1f1/Amon/ta/gr/v20251130/"
     "ta_Amon_ACE2-ERA5_aimip_r1i1p1f1_gr_197810-202412.nc"
@@ -176,7 +201,7 @@ ds_day = xr.open_dataset(
 
 ## Generation
 
-The dataset was generated through the following steps:
+The ACE2.1-ERA5 outputs were generated through the following steps:
 
 1. **Training**: The ACE2.1-ERA5 base model was trained on ERA5 reanalysis (1979–2008 training period, 2009–2014 validation) across four random seeds.
 2. **Seed selection**: Each trained seed was evaluated across multiple multi-year inference runs; the best-performing checkpoint was selected.
@@ -184,11 +209,18 @@ The dataset was generated through the following steps:
 4. **Final selection**: Fine-tuned seeds were re-evaluated, and the best checkpoint was selected for inference.
 5. **Inference**: 15 parallel 46-year simulations were run (5 initial conditions × 3 SST scenarios), starting October 1, 1978, with a 3-month spinup period.
 
-Raw 6-hourly inference outputs were subsequently postprocessed to produce the AIMIP-compliant daily and monthly mean files in this dataset, including stacking pressure levels along a `plev` dimension and adding required CF and CMIP6 metadata attributes.
+The ACE2.2-ERA5 outputs were generated through the following steps:
+
+1. **Training**: Four random seeds were trained on ERA5 reanalysis (1979–2013 except 1994 for training, 1994 and 2014 for validation), with single-step pretraining followed by multi-step fine-tuning.
+2. **Seed selection**: Each seed was evaluated in simulations over 1979–2014, and one was selected.
+3. **Fine-tuning**: With the selected seed's main network frozen, a secondary MLP decoder was trained to produce the pressure-level diagnostic variables.
+4. **Inference**: 15 parallel 46-year simulations were run (5 random seeds × 3 SST scenarios) from one initial condition, starting October 1, 1978, with a 3-month spinup period.
+
+For both models, raw 6-hourly inference outputs were subsequently postprocessed to produce the AIMIP-compliant daily and monthly mean files in this dataset, including stacking pressure levels along a `plev` dimension and adding required CF and CMIP6 metadata attributes.
 
 ## Citation
 
-If you use this dataset, please cite the ACE2 paper:
+If you use this dataset, please cite the ACE2 paper, and for ACE2.2-ERA5 also McGibbon et al. (2026), https://arxiv.org/abs/2611.28315:
 
 ```bibtex
 @article{watt-meyer2025ace2,
@@ -201,7 +233,7 @@ If you use this dataset, please cite the ACE2 paper:
 }
 ```
 
-This dataset was generated for the [AIMIP Phase 1 intercomparison](https://github.com/ai2cm/AIMIP). An AIMIP paper is forthcoming; this citation will be updated when it is available.
+This dataset was generated for the [AIMIP Phase 1 intercomparison](https://github.com/ai2cm/AIMIP), which is described in the AIMIP Phase 1 evaluation paper (https://arxiv.org/abs/2605.06944).
 
 ## License
 
